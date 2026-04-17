@@ -1,0 +1,986 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>確率計算機</title>
+
+  <link rel="apple-touch-icon" href="nandemo_meter_icon.png">
+  <link rel="icon" type="image/png" sizes="512x512" href="nandemo_meter_icon.png">
+  <link rel="manifest" href="manifest.json">
+
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="確率計算機">
+  <meta name="theme-color" content="#0f172a">
+
+  <style>
+    :root{
+      --bg1:#0f172a;
+      --bg2:#1e293b;
+      --card:#ffffff;
+      --text:#0f172a;
+      --muted:#64748b;
+      --line:#e2e8f0;
+      --accent:#2563eb;
+      --accent2:#7c3aed;
+      --danger:#dc2626;
+      --warn:#f59e0b;
+      --ok:#16a34a;
+      --live:#0ea5e9;
+      --shadow:0 18px 44px rgba(2,6,23,.22);
+      --radius:22px;
+      --digit-h:72px;
+      --digit-w:42px;
+      --digit-font:56px;
+    }
+
+    * { box-sizing:border-box; }
+    html,body{
+      margin:0;
+      padding:0;
+      min-height:100%;
+      background:linear-gradient(180deg,var(--bg1),var(--bg2));
+      font-family:-apple-system,BlinkMacSystemFont,"Hiragino Sans","Yu Gothic","Noto Sans JP",sans-serif;
+      color:#fff;
+      -webkit-text-size-adjust:100%;
+    }
+
+    body{ min-height:100vh; }
+
+    .app{
+      max-width:640px;
+      margin:0 auto;
+      padding:
+        max(16px, env(safe-area-inset-top))
+        14px
+        max(24px, env(safe-area-inset-bottom))
+        14px;
+    }
+
+    .hero{
+      text-align:center;
+      padding:8px 8px 12px;
+    }
+
+    .title{
+      font-size:30px;
+      font-weight:900;
+      letter-spacing:.02em;
+      margin:4px 0 6px;
+    }
+
+    .subtitle{
+      font-size:13px;
+      color:rgba(255,255,255,.78);
+      line-height:1.65;
+      margin:0;
+    }
+
+    .card{
+      background:var(--card);
+      color:var(--text);
+      border-radius:var(--radius);
+      box-shadow:var(--shadow);
+      overflow:hidden;
+    }
+
+    .meter-card{
+      margin-top:10px;
+      padding:18px 14px 16px;
+    }
+
+    .digital-wrap{
+      display:flex;
+      justify-content:center;
+      align-items:center;
+      padding:10px 0 4px;
+    }
+
+    .digital-frame{
+      min-width:min(92vw, 420px);
+      padding:18px 14px 16px;
+      border-radius:24px;
+      background:
+        radial-gradient(circle at 30% 20%, rgba(56,189,248,.18), transparent 38%),
+        radial-gradient(circle at 70% 80%, rgba(124,58,237,.14), transparent 42%),
+        linear-gradient(180deg, #0b1220, #111827);
+      border:1px solid rgba(148,163,184,.18);
+      box-shadow:
+        inset 0 1px 0 rgba(255,255,255,.06),
+        inset 0 -1px 0 rgba(255,255,255,.03),
+        0 20px 48px rgba(2,6,23,.32);
+    }
+
+    .digital-label{
+      text-align:center;
+      font-size:12px;
+      font-weight:900;
+      letter-spacing:.14em;
+      color:#93c5fd;
+      margin-bottom:12px;
+      opacity:.9;
+    }
+
+    .digital-display{
+      display:flex;
+      justify-content:center;
+      align-items:flex-end;
+      gap:6px;
+      padding:4px 0;
+    }
+
+    .reel{
+      width:var(--digit-w);
+      height:var(--digit-h);
+      overflow:hidden;
+      border-radius:12px;
+      background:linear-gradient(180deg, rgba(255,255,255,.04), rgba(255,255,255,.02));
+      box-shadow:
+        inset 0 1px 0 rgba(255,255,255,.06),
+        inset 0 -1px 0 rgba(255,255,255,.03);
+      position:relative;
+    }
+
+    .reel::before,
+    .reel::after{
+      content:"";
+      position:absolute;
+      left:0; right:0;
+      height:14px;
+      z-index:2;
+      pointer-events:none;
+    }
+
+    .reel::before{
+      top:0;
+      background:linear-gradient(180deg, rgba(11,18,32,.95), rgba(11,18,32,0));
+    }
+
+    .reel::after{
+      bottom:0;
+      background:linear-gradient(180deg, rgba(11,18,32,0), rgba(11,18,32,.95));
+    }
+
+    .reel-track{
+      transform:translateY(0);
+      will-change:transform;
+    }
+
+    .digit{
+      height:var(--digit-h);
+      line-height:var(--digit-h);
+      text-align:center;
+      font-size:var(--digit-font);
+      font-weight:900;
+      letter-spacing:-.05em;
+      color:#e5f3ff;
+      text-shadow:
+        0 0 14px rgba(56,189,248,.24),
+        0 0 24px rgba(37,99,235,.18);
+      font-variant-numeric: tabular-nums;
+      user-select:none;
+    }
+
+    .static-char{
+      height:var(--digit-h);
+      line-height:var(--digit-h);
+      font-size:38px;
+      font-weight:900;
+      color:#cbd5e1;
+      padding:0 2px;
+      user-select:none;
+      min-width:18px;
+      text-align:center;
+    }
+
+    .unit{
+      margin-left:8px;
+      margin-bottom:10px;
+      font-size:24px;
+      font-weight:900;
+      color:#94a3b8;
+      user-select:none;
+    }
+
+    .meter-caption{
+      text-align:center;
+      margin-top:14px;
+    }
+
+    .meter-title{
+      font-size:18px;
+      font-weight:900;
+      margin-bottom:4px;
+    }
+
+    .meter-desc{
+      font-size:13px;
+      color:var(--muted);
+      line-height:1.6;
+      min-height:2.6em;
+      padding:0 8px;
+    }
+
+    .content-card{
+      margin-top:14px;
+      padding:14px;
+    }
+
+    .label{
+      font-size:13px;
+      font-weight:900;
+      color:#334155;
+      margin:2px 0 8px;
+    }
+
+    .pass-row{
+      display:flex;
+      gap:8px;
+      align-items:center;
+      flex-wrap:wrap;
+      margin-bottom:10px;
+    }
+
+    input[type="password"]{
+      flex:1;
+      min-width:180px;
+      border:1.5px solid var(--line);
+      border-radius:14px;
+      padding:12px 14px;
+      font-size:16px;
+      outline:none;
+      background:#fff;
+      color:#0f172a;
+    }
+
+    input[type="password"]:focus,
+    textarea:focus{
+      border-color:#93c5fd;
+      box-shadow:0 0 0 4px rgba(37,99,235,.10);
+    }
+
+    .status-pill{
+      display:inline-flex;
+      align-items:center;
+      gap:6px;
+      padding:8px 12px;
+      border-radius:999px;
+      font-size:12px;
+      font-weight:900;
+      background:#f8fafc;
+      border:1px solid #e2e8f0;
+      color:#475569;
+    }
+
+    .status-pill.ok{
+      background:#ecfdf5;
+      border-color:#bbf7d0;
+      color:#166534;
+    }
+
+    .status-pill.ng{
+      background:#fef2f2;
+      border-color:#fecaca;
+      color:#991b1b;
+    }
+
+    textarea{
+      width:100%;
+      min-height:118px;
+      resize:vertical;
+      border:1.5px solid var(--line);
+      border-radius:16px;
+      padding:14px;
+      font-size:16px;
+      line-height:1.6;
+      outline:none;
+      background:#fff;
+      color:#0f172a;
+    }
+
+    .btn-row{
+      display:flex;
+      gap:10px;
+      margin-top:12px;
+      flex-wrap:wrap;
+    }
+
+    button{
+      appearance:none;
+      border:none;
+      border-radius:14px;
+      padding:13px 16px;
+      font-size:16px;
+      font-weight:900;
+      cursor:pointer;
+      transition:transform .08s ease, opacity .18s ease, box-shadow .18s ease, background .18s ease;
+    }
+
+    button:active{ transform:translateY(1px) scale(.995); }
+
+    .primary{
+      flex:1;
+      min-width:150px;
+      color:#fff;
+      background:linear-gradient(135deg,var(--accent),var(--accent2));
+      box-shadow:0 8px 20px rgba(37,99,235,.28);
+    }
+
+    .secondary{
+      background:#eef2ff;
+      color:#3730a3;
+    }
+
+    .ghost{
+      background:#f8fafc;
+      color:#334155;
+      border:1px solid var(--line);
+    }
+
+    .mic-btn{
+      background:#eff6ff;
+      color:#1d4ed8;
+      border:1px solid #bfdbfe;
+    }
+
+    .mic-btn.listening{
+      background:#fee2e2;
+      color:#b91c1c;
+      border:1px solid #fecaca;
+    }
+
+    .speak-btn{
+      background:#f5f3ff;
+      color:#6d28d9;
+      border:1px solid #ddd6fe;
+    }
+
+    .chips{
+      display:flex;
+      flex-wrap:wrap;
+      gap:8px;
+      margin-top:12px;
+    }
+
+    .chip{
+      border:1px solid #dbeafe;
+      background:#eff6ff;
+      color:#1d4ed8;
+      padding:8px 12px;
+      border-radius:999px;
+      font-size:13px;
+      font-weight:800;
+      cursor:pointer;
+    }
+
+    .live-banner{
+      display:none;
+      margin-top:12px;
+      padding:14px;
+      border-radius:18px;
+      background:
+        linear-gradient(135deg, rgba(14,165,233,.18), rgba(37,99,235,.14)),
+        linear-gradient(180deg, #f8fbff, #eef6ff);
+      border:1px solid rgba(56,189,248,.38);
+      box-shadow: inset 0 1px 0 rgba(255,255,255,.65);
+    }
+
+    .live-banner.show{
+      display:block;
+    }
+
+    .live-head{
+      display:flex;
+      align-items:center;
+      gap:10px;
+      margin-bottom:6px;
+    }
+
+    .live-dot{
+      width:12px;
+      height:12px;
+      border-radius:999px;
+      background:#0ea5e9;
+      box-shadow:0 0 0 0 rgba(14,165,233,.58);
+      animation:pulse 1.4s infinite;
+      flex:0 0 12px;
+    }
+
+    @keyframes pulse{
+      0% { box-shadow:0 0 0 0 rgba(14,165,233,.58); }
+      70% { box-shadow:0 0 0 14px rgba(14,165,233,0); }
+      100% { box-shadow:0 0 0 0 rgba(14,165,233,0); }
+    }
+
+    .live-title{
+      font-size:13px;
+      font-weight:900;
+      letter-spacing:.08em;
+      color:#0c4a6e;
+    }
+
+    .live-text{
+      font-size:13px;
+      color:#0f172a;
+      line-height:1.6;
+      font-weight:700;
+    }
+
+    .reply-card{
+      margin-top:14px;
+      padding:14px;
+    }
+
+    .bubble{
+      border-radius:18px;
+      padding:12px 14px;
+      line-height:1.72;
+      font-size:15px;
+      white-space:pre-wrap;
+      word-break:break-word;
+    }
+
+    .bubble + .bubble{ margin-top:10px; }
+
+    .bubble.user{
+      background:#eff6ff;
+      color:#1e3a8a;
+      border:1px solid #dbeafe;
+    }
+
+    .bubble.ai{
+      background:#f8fafc;
+      color:#0f172a;
+      border:1px solid #e2e8f0;
+    }
+
+    .bubble.system{
+      background:#fff7ed;
+      color:#9a3412;
+      border:1px solid #fed7aa;
+    }
+
+    .small{
+      font-size:12px;
+      color:var(--muted);
+      margin-top:10px;
+      line-height:1.65;
+    }
+
+    .footer-note{
+      margin-top:12px;
+      font-size:12px;
+      color:rgba(255,255,255,.75);
+      text-align:center;
+      line-height:1.6;
+    }
+
+    .source-card{
+      margin-top:12px;
+      padding:12px 14px;
+      border:1px solid #e2e8f0;
+      border-radius:16px;
+      background:#f8fafc;
+    }
+
+    .source-title{
+      font-size:13px;
+      font-weight:900;
+      color:#334155;
+      margin-bottom:8px;
+    }
+
+    .source-badge{
+      display:inline-block;
+      margin-left:8px;
+      font-size:11px;
+      font-weight:900;
+      color:#0369a1;
+      background:#e0f2fe;
+      border:1px solid #bae6fd;
+      border-radius:999px;
+      padding:4px 8px;
+      vertical-align:middle;
+    }
+
+    .source-item{
+      margin-top:6px;
+    }
+
+    .source-item a{
+      color:#2563eb;
+      text-decoration:none;
+      font-size:14px;
+      line-height:1.5;
+      font-weight:700;
+    }
+
+    @media (max-width:390px){
+      :root{
+        --digit-h:64px;
+        --digit-w:38px;
+        --digit-font:50px;
+      }
+      .title{ font-size:25px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <div class="hero">
+      <div class="title">確率計算機</div>
+      <p class="subtitle">今この瞬間の確率を、データと式で示す</p>
+    </div>
+
+    <section class="card meter-card">
+      <div class="digital-wrap">
+        <div class="digital-frame">
+          <div class="digital-label">PROBABILITY CALCULATOR</div>
+
+          <div class="digital-display" aria-label="probability display">
+            <div class="reel"><div class="reel-track" id="reelHundreds"></div></div>
+            <div class="reel"><div class="reel-track" id="reelTens"></div></div>
+            <div class="reel"><div class="reel-track" id="reelOnes"></div></div>
+            <div class="static-char">.</div>
+            <div class="reel"><div class="reel-track" id="reelTenths"></div></div>
+            <div class="unit">%</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="meter-caption">
+        <div class="meter-title" id="meterTitle">まだ未測定です</div>
+        <div class="meter-desc" id="meterDesc">質問を入力して「測る」を押してください。</div>
+      </div>
+    </section>
+
+    <section class="card content-card">
+      <div class="label">パスコード</div>
+      <div class="pass-row">
+        <input type="password" id="passcodeInput" placeholder="パスコードを入力" />
+        <button class="secondary" id="savePassBtn" type="button">保存</button>
+      </div>
+      <div id="passStatus" class="status-pill">未確認</div>
+
+      <div style="height:12px;"></div>
+
+      <div class="label">知りたいこと</div>
+      <textarea id="userInput" placeholder="例：今年ドジャースがワールドシリーズを制する確率は？
+例：次の試合で井上尚弥が勝つ確率は？
+例：私が地球を歩いて一周できる確率は？"></textarea>
+
+      <div class="btn-row">
+        <button class="mic-btn" id="micBtn" type="button">🎤 話す</button>
+        <button class="primary" id="sendBtn" type="button">測る</button>
+      </div>
+
+      <div class="btn-row">
+        <button class="speak-btn" id="speakBtn" type="button">🔊 答えを聞く</button>
+        <button class="secondary" id="retryBtn" type="button">もう一度聞く</button>
+        <button class="ghost" id="clearBtn" type="button">クリア</button>
+      </div>
+
+      <div class="chips">
+        <div class="chip" data-example="今年ドジャースがワールドシリーズを制する確率は？">ドジャース</div>
+        <div class="chip" data-example="次の試合で井上尚弥が勝つ確率は？">井上尚弥</div>
+        <div class="chip" data-example="私が地球を歩いて一周できる確率は？">地球一周</div>
+        <div class="chip" data-example="来月までにこの株が上がる確率は？">株</div>
+      </div>
+
+      <div id="liveBanner" class="live-banner">
+        <div class="live-head">
+          <div class="live-dot"></div>
+          <div class="live-title">LIVE分析中</div>
+        </div>
+        <div class="live-text">最新データを検索し、数字を抽出して、式を組み立てています…</div>
+      </div>
+
+      <div class="small">
+        未来を断言しません。今この瞬間の材料から、確率だけを計算します。
+      </div>
+    </section>
+
+    <section class="card reply-card">
+      <div class="label">分析結果</div>
+      <div id="chatArea">
+        <div class="bubble system">ここに「結論 / 根拠データ / 計算式 / 判定」が表示されます。</div>
+      </div>
+      <div id="sourcesBox"></div>
+    </section>
+
+    <div class="footer-note">
+      確率計算機 / DIGITAL LIVE MODE
+    </div>
+  </div>
+
+  <script>
+    const WORKER_URL = "https://cal.gudafutanu.workers.dev";
+
+    const userInput = document.getElementById("userInput");
+    const passcodeInput = document.getElementById("passcodeInput");
+    const savePassBtn = document.getElementById("savePassBtn");
+    const passStatus = document.getElementById("passStatus");
+
+    const sendBtn = document.getElementById("sendBtn");
+    const retryBtn = document.getElementById("retryBtn");
+    const clearBtn = document.getElementById("clearBtn");
+    const micBtn = document.getElementById("micBtn");
+    const speakBtn = document.getElementById("speakBtn");
+    const chatArea = document.getElementById("chatArea");
+    const sourcesBox = document.getElementById("sourcesBox");
+    const liveBanner = document.getElementById("liveBanner");
+
+    const meterTitle = document.getElementById("meterTitle");
+    const meterDesc = document.getElementById("meterDesc");
+
+    const reels = {
+      hundreds: document.getElementById("reelHundreds"),
+      tens: document.getElementById("reelTens"),
+      ones: document.getElementById("reelOnes"),
+      tenths: document.getElementById("reelTenths")
+    };
+
+    let history = [];
+    let lastAiText = "";
+    let recognition = null;
+    let listening = false;
+
+    function digitHeight() {
+      return parseInt(getComputedStyle(document.documentElement).getPropertyValue('--digit-h')) || 72;
+    }
+
+    function buildReel(track) {
+      const arr = [];
+      for (let loop = 0; loop < 4; loop++) {
+        for (let n = 0; n <= 9; n++) {
+          arr.push(`<div class="digit">${n}</div>`);
+        }
+      }
+      track.innerHTML = arr.join("");
+      track.style.transform = "translateY(0px)";
+      track.style.transition = "none";
+    }
+
+    function initReels() {
+      Object.values(reels).forEach(buildReel);
+      setDisplayInstant(0.0);
+    }
+
+    function splitProbability(value) {
+      const safe = Math.max(0, Math.min(100, Number(value) || 0));
+      const fixed = safe.toFixed(1);
+      const [intPart, decPart] = fixed.split(".");
+      const padded = intPart.padStart(3, "0");
+      return {
+        hundreds: Number(padded[0]),
+        tens: Number(padded[1]),
+        ones: Number(padded[2]),
+        tenths: Number(decPart)
+      };
+    }
+
+    function setReelToDigit(track, digit) {
+      const h = digitHeight();
+      const finalIndex = 20 + digit;
+      track.style.transition = "none";
+      track.style.transform = `translateY(${-finalIndex * h}px)`;
+    }
+
+    function setDisplayInstant(value) {
+      const p = splitProbability(value);
+      setReelToDigit(reels.hundreds, p.hundreds);
+      setReelToDigit(reels.tens, p.tens);
+      setReelToDigit(reels.ones, p.ones);
+      setReelToDigit(reels.tenths, p.tenths);
+    }
+
+    function animateReel(track, digit, duration, delay) {
+      const h = digitHeight();
+      const startLoop = Math.floor(Math.random() * 10);
+      const startIndex = startLoop;
+      track.style.transition = "none";
+      track.style.transform = `translateY(${-startIndex * h}px)`;
+
+      requestAnimationFrame(() => {
+        requestAnimationFrame(() => {
+          const finalIndex = 20 + digit;
+          track.style.transition = `transform ${duration}ms cubic-bezier(0.22, 1.35, 0.32, 1) ${delay}ms`;
+          track.style.transform = `translateY(${-finalIndex * h}px)`;
+        });
+      });
+    }
+
+    function animateProbability(value) {
+      const safe = Math.max(0, Math.min(100, Number(value) || 0));
+      const p = splitProbability(safe);
+
+      animateReel(reels.hundreds, p.hundreds, 900, 0);
+      animateReel(reels.tens, p.tens, 1100, 180);
+      animateReel(reels.ones, p.ones, 1300, 380);
+      animateReel(reels.tenths, p.tenths, 1500, 620);
+    }
+
+    function setMeter(probability, title, desc) {
+      animateProbability(probability);
+      meterTitle.textContent = title || "判定結果";
+      meterDesc.textContent = desc || "";
+    }
+
+    function resetMeter() {
+      setDisplayInstant(0.0);
+      meterTitle.textContent = "まだ未測定です";
+      meterDesc.textContent = "質問を入力して「測る」を押してください。";
+    }
+
+    function addBubble(role, text) {
+      const div = document.createElement("div");
+      div.className = "bubble " + role;
+      div.textContent = text;
+      chatArea.appendChild(div);
+      chatArea.scrollTop = chatArea.scrollHeight;
+    }
+
+    function clearChat() {
+      chatArea.innerHTML = "";
+      addBubble("system", "ここに「結論 / 根拠データ / 計算式 / 判定」が表示されます。");
+    }
+
+    function setBusy(flag) {
+      sendBtn.disabled = flag;
+      retryBtn.disabled = flag;
+      sendBtn.style.opacity = flag ? ".7" : "1";
+      retryBtn.style.opacity = flag ? ".7" : "1";
+      liveBanner.classList.toggle("show", flag);
+    }
+
+    function getSavedPasscode() {
+      return localStorage.getItem("prob_calc_passcode") || "";
+    }
+
+    function savePasscode() {
+      const code = passcodeInput.value.trim();
+      localStorage.setItem("prob_calc_passcode", code);
+      updatePassStatus(code ? "保存済み" : "未入力", code ? "ok" : "");
+    }
+
+    function updatePassStatus(text, mode = "") {
+      passStatus.textContent = text;
+      passStatus.className = "status-pill";
+      if (mode) passStatus.classList.add(mode);
+    }
+
+    function speakText(text) {
+      if (!text) {
+        alert("まだ分析結果がありません。");
+        return;
+      }
+      if (!("speechSynthesis" in window)) {
+        alert("この端末では読み上げに対応していません。");
+        return;
+      }
+      window.speechSynthesis.cancel();
+      const utter = new SpeechSynthesisUtterance(text);
+      utter.lang = "ja-JP";
+      utter.rate = 1;
+      utter.pitch = 1;
+      window.speechSynthesis.speak(utter);
+    }
+
+    function setupRecognition() {
+      const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+      if (!SR) return null;
+
+      const rec = new SR();
+      rec.lang = "ja-JP";
+      rec.interimResults = false;
+      rec.continuous = false;
+
+      rec.onstart = () => {
+        listening = true;
+        micBtn.classList.add("listening");
+        micBtn.textContent = "🔴 聞いています";
+      };
+
+      rec.onend = () => {
+        listening = false;
+        micBtn.classList.remove("listening");
+        micBtn.textContent = "🎤 話す";
+      };
+
+      rec.onerror = (e) => {
+        addBubble("system", "音声入力エラー: " + (e.error || "unknown"));
+      };
+
+      rec.onresult = (e) => {
+        const transcript = Array.from(e.results)
+          .map(result => result[0]?.transcript || "")
+          .join("")
+          .trim();
+        if (transcript) userInput.value = transcript;
+      };
+
+      return rec;
+    }
+
+    function renderSources(sources = [], usedLiveSearch = false) {
+      if (!usedLiveSearch || !sources.length) {
+        sourcesBox.innerHTML = "";
+        return;
+      }
+
+      const links = sources.map((s) => {
+        const safeTitle = escapeHtml(s.title || s.url);
+        const safeUrl = escapeHtml(s.url || "");
+        return `<div class="source-item"><a href="${safeUrl}" target="_blank" rel="noopener noreferrer">${safeTitle}</a></div>`;
+      }).join("");
+
+      sourcesBox.innerHTML = `
+        <div class="source-card">
+          <div class="source-title">
+            参照元
+            <span class="source-badge">LIVE DATA</span>
+          </div>
+          ${links}
+        </div>
+      `;
+    }
+
+    function escapeHtml(str) {
+      return String(str)
+        .replaceAll("&", "&amp;")
+        .replaceAll("<", "&lt;")
+        .replaceAll(">", "&gt;")
+        .replaceAll('"', "&quot;")
+        .replaceAll("'", "&#39;");
+    }
+
+    async function askMeter() {
+      const text = userInput.value.trim();
+      const passcode = passcodeInput.value.trim() || getSavedPasscode();
+
+      if (!text) {
+        alert("知りたいことを入力してください。");
+        return;
+      }
+      if (!passcode) {
+        alert("先にパスコードを入力してください。");
+        return;
+      }
+
+      addBubble("user", text);
+      history.push({ role: "user", content: text });
+      userInput.value = "";
+
+      setBusy(true);
+
+      try {
+        const res = await fetch(WORKER_URL, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            input: text,
+            history,
+            passcode
+          })
+        });
+
+        const data = await res.json();
+
+        if (!res.ok) {
+          if (res.status === 401) updatePassStatus("パスコード不正", "ng");
+          throw new Error(data.error || "通信エラー");
+        }
+
+        updatePassStatus("パスコードOK", "ok");
+
+        const probability = typeof data.probability === "number"
+          ? data.probability
+          : (typeof data.meter === "number" ? data.meter : 0);
+
+        const title = data.title || "判定結果";
+        const summary = data.summary || "";
+        const analysis = data.analysis || data.assistant || "分析結果を返せませんでした。";
+
+        setMeter(probability, title, summary);
+        addBubble("ai", analysis);
+        renderSources(data.sources || [], !!data.used_live_search);
+
+        history.push({
+          role: "assistant",
+          content: analysis
+        });
+
+        lastAiText = analysis;
+
+      } catch (err) {
+        addBubble("system", "エラー: " + err.message);
+      } finally {
+        setBusy(false);
+      }
+    }
+
+    savePassBtn.addEventListener("click", savePasscode);
+    sendBtn.addEventListener("click", askMeter);
+
+    retryBtn.addEventListener("click", () => {
+      const lastUser = [...history].reverse().find(x => x.role === "user");
+      if (!lastUser) {
+        alert("まだ質問がありません。");
+        return;
+      }
+      userInput.value = lastUser.content;
+      askMeter();
+    });
+
+    clearBtn.addEventListener("click", () => {
+      history = [];
+      lastAiText = "";
+      userInput.value = "";
+      clearChat();
+      resetMeter();
+      renderSources([], false);
+      window.speechSynthesis?.cancel();
+    });
+
+    speakBtn.addEventListener("click", () => speakText(lastAiText));
+
+    micBtn.addEventListener("click", () => {
+      if (!recognition) {
+        alert("この端末では音声入力に対応していません。");
+        return;
+      }
+      if (listening) {
+        recognition.stop();
+        return;
+      }
+      try {
+        recognition.start();
+      } catch (e) {
+        addBubble("system", "音声入力を開始できませんでした。もう一度押してください。");
+      }
+    });
+
+    userInput.addEventListener("keydown", (e) => {
+      if (e.key === "Enter" && !e.shiftKey) {
+        e.preventDefault();
+        askMeter();
+      }
+    });
+
+    document.querySelectorAll(".chip").forEach(chip => {
+      chip.addEventListener("click", () => {
+        userInput.value = chip.dataset.example || "";
+        userInput.focus();
+      });
+    });
+
+    passcodeInput.value = getSavedPasscode();
+    if (passcodeInput.value) updatePassStatus("保存済み", "ok");
+
+    recognition = setupRecognition();
+    initReels();
+    resetMeter();
+  </script>
+</body>
+</html>
