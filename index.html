@@ -102,24 +102,46 @@ function animateNumber(target){
 
 async function send(){
 
-  const text = document.getElementById("input").value;
-  const pass = document.getElementById("passcode").value;
+  const text = document.getElementById("input").value.trim();
+  const pass = document.getElementById("passcode").value.trim();
 
-  const res = await fetch(WORKER_URL,{
-    method:"POST",
-    headers:{ "Content-Type":"application/json" },
-    body: JSON.stringify({
-      input:text,
-      passcode:pass
-    })
-  });
+  try{
 
-  const data = await res.json();
+    const res = await fetch(WORKER_URL,{
+      method:"POST",
+      headers:{ "Content-Type":"application/json" },
+      body: JSON.stringify({
+        input:text,
+        passcode:pass
+      })
+    });
 
-  animateNumber(data.probability || 0);
+    const data = await res.json();
+    console.log(data);
 
-  document.getElementById("result").innerText =
-    data.analysis || "結果なし";
+    if(!res.ok){
+      document.getElementById("result").innerText =
+        "エラー:\n" + JSON.stringify(data, null, 2);
+      return;
+    }
+
+    const p =
+      typeof data.probability === "number"
+        ? data.probability
+        : (typeof data.meter === "number" ? data.meter : 0);
+
+    animateNumber(p);
+
+    document.getElementById("result").innerText =
+      data.analysis ||
+      data.assistant ||
+      data.summary ||
+      JSON.stringify(data, null, 2);
+
+  }catch(e){
+    document.getElementById("result").innerText =
+      "通信エラー:\n" + e.message;
+  }
 }
 
 </script>
