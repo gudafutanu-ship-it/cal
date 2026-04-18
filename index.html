@@ -3,25 +3,22 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>珍問・文章題 AI 完成版</title>
+  <title>問題と人力</title>
   <style>
     :root{
-      --bg:#f6f7fb;
+      --bg:#f7f7fb;
       --card:#ffffff;
-      --line:#d9dfeb;
+      --line:#d8ddea;
       --text:#1f2937;
       --muted:#6b7280;
       --accent:#4f46e5;
-      --accent2:#4338ca;
-      --soft:#eef2ff;
+      --accent-soft:#eef2ff;
+      --danger:#b91c1c;
+      --danger-soft:#fef2f2;
       --ok:#0f766e;
-      --okbg:#ecfdf5;
-      --warn:#b45309;
-      --warnbg:#fffbeb;
-      --bad:#b91c1c;
-      --badbg:#fef2f2;
-      --shadow:0 10px 30px rgba(0,0,0,.05);
-      --radius:18px;
+      --ok-soft:#ecfdf5;
+      --shadow:0 10px 28px rgba(0,0,0,.05);
+      --radius:20px;
     }
 
     *{box-sizing:border-box}
@@ -34,149 +31,125 @@
     }
 
     .wrap{
-      max-width:1100px;
+      max-width:860px;
       margin:0 auto;
-      padding:18px;
+      padding:18px 14px 30px;
     }
 
-    .card{
-      background:var(--card);
-      border:1px solid var(--line);
-      border-radius:var(--radius);
-      box-shadow:var(--shadow);
-      padding:18px;
-      margin-bottom:16px;
+    .title{
+      font-size:32px;
+      font-weight:900;
+      margin:0 0 18px;
+      letter-spacing:.02em;
     }
 
-    h1{
-      margin:0 0 8px;
-      font-size:28px;
-      line-height:1.35;
-    }
-
-    h2{
-      margin:0 0 12px;
-      font-size:20px;
-    }
-
-    .lead{
-      margin:0;
-      color:var(--muted);
-      line-height:1.8;
-      font-size:15px;
-    }
-
-    .grid{
+    .topbar{
       display:grid;
-      grid-template-columns:1fr;
-      gap:16px;
+      grid-template-columns: 1fr auto auto;
+      gap:10px;
+      align-items:end;
+      margin-bottom:18px;
     }
 
-    @media (min-width: 980px){
-      .grid{
-        grid-template-columns:1fr 1fr;
-      }
+    .topbar .field{
+      display:flex;
+      flex-direction:column;
+      gap:8px;
     }
 
-    label{
-      display:block;
-      font-size:14px;
-      font-weight:700;
-      margin-bottom:8px;
+    .topbar label{
+      font-size:15px;
+      font-weight:800;
     }
 
+    input[type="password"],
+    input[type="text"],
     textarea{
       width:100%;
-      min-height:180px;
-      resize:vertical;
-      border:1px solid var(--line);
-      border-radius:14px;
-      padding:14px;
-      font-size:17px;
-      line-height:1.8;
+      border:2px solid var(--line);
+      border-radius:16px;
       background:#fff;
       outline:none;
+      font-size:16px;
+      padding:12px 14px;
+      transition:.18s ease;
     }
 
-    textarea:focus,
+    input[type="password"]:focus,
     input[type="text"]:focus,
-    input[type="password"]:focus{
+    textarea:focus{
       border-color:var(--accent);
-      box-shadow:0 0 0 4px rgba(79,70,229,.12);
-    }
-
-    input[type="text"],
-    input[type="password"]{
-      width:100%;
-      border:1px solid var(--line);
-      border-radius:12px;
-      padding:10px 12px;
-      font-size:15px;
-      outline:none;
-      background:#fff;
-    }
-
-    .row{
-      display:flex;
-      flex-wrap:wrap;
-      gap:10px;
-      align-items:center;
-    }
-
-    .mode-wrap{
-      display:flex;
-      gap:8px;
-      flex-wrap:wrap;
-      margin-bottom:14px;
+      box-shadow:0 0 0 4px rgba(79,70,229,.10);
     }
 
     .mode-btn{
-      border:1px solid var(--line);
+      height:50px;
+      min-width:92px;
+      padding:0 16px;
+      border-radius:16px;
+      border:2px solid var(--line);
       background:#fff;
       color:var(--text);
-      padding:10px 14px;
-      border-radius:999px;
-      font-size:14px;
-      font-weight:700;
+      font-size:15px;
+      font-weight:800;
       cursor:pointer;
     }
 
     .mode-btn.active{
-      background:var(--soft);
-      color:var(--accent2);
       border-color:#c7d2fe;
+      background:var(--accent-soft);
+      color:var(--accent);
     }
 
-    button{
+    .section{
+      background:var(--card);
+      border:1px solid var(--line);
+      border-radius:24px;
+      box-shadow:var(--shadow);
+      padding:18px;
+      margin-bottom:18px;
+    }
+
+    .section-title{
+      font-size:24px;
+      font-weight:900;
+      margin:0 0 14px;
+    }
+
+    textarea{
+      min-height:190px;
+      resize:vertical;
+      line-height:1.8;
+    }
+
+    .actions{
+      display:flex;
+      gap:10px;
+      flex-wrap:wrap;
+      margin-top:12px;
+    }
+
+    button.action{
       border:none;
-      border-radius:12px;
-      padding:12px 18px;
-      font-size:15px;
-      font-weight:700;
+      border-radius:16px;
+      padding:13px 20px;
+      font-size:16px;
+      font-weight:800;
       cursor:pointer;
       transition:.18s ease;
     }
 
-    button:hover{ transform:translateY(-1px); }
-    button:active{ transform:translateY(0); }
-    button:disabled{
+    button.action:hover{ transform:translateY(-1px); }
+    button.action:active{ transform:translateY(0); }
+    button.action:disabled{
       opacity:.6;
       cursor:not-allowed;
       transform:none;
     }
 
     .primary{
-      background:var(--accent);
-      color:#fff;
-    }
-
-    .primary:hover{
-      background:var(--accent2);
-    }
-
-    .secondary{
-      background:var(--soft);
-      color:var(--accent2);
+      background:var(--accent-soft);
+      color:var(--accent);
     }
 
     .ghost{
@@ -191,92 +164,52 @@
     }
 
     .status{
-      margin-top:12px;
       min-height:24px;
-      font-size:14px;
-      color:var(--muted);
-    }
-
-    .hint{
       margin-top:12px;
       color:var(--muted);
       font-size:14px;
-      line-height:1.8;
-    }
-
-    .box{
-      background:#f9fafb;
-      border:1px dashed var(--line);
-      border-radius:12px;
-      padding:12px;
-      margin-top:12px;
-      font-size:14px;
-      line-height:1.8;
-      color:#374151;
-    }
-
-    .preset{
-      display:flex;
-      flex-wrap:wrap;
-      gap:8px;
-      margin-top:10px;
-    }
-
-    .chip{
-      border:1px solid var(--line);
-      background:#fff;
-      color:#374151;
-      border-radius:999px;
-      padding:8px 12px;
-      cursor:pointer;
-      font-size:13px;
-    }
-
-    .chip:hover{
-      background:#f8fafc;
+      font-weight:700;
     }
 
     .pill{
       display:inline-block;
-      padding:5px 10px;
+      padding:6px 12px;
       border-radius:999px;
       font-size:13px;
-      font-weight:700;
+      font-weight:900;
       margin-bottom:10px;
       border:1px solid transparent;
     }
 
     .pill.ok{
-      background:var(--okbg);
       color:var(--ok);
+      background:var(--ok-soft);
       border-color:#a7f3d0;
     }
 
     .pill.warn{
-      background:var(--warnbg);
-      color:var(--warn);
+      color:#b45309;
+      background:#fffbeb;
       border-color:#fde68a;
     }
 
     .pill.bad{
-      background:var(--badbg);
-      color:var(--bad);
+      color:var(--danger);
+      background:var(--danger-soft);
       border-color:#fecaca;
     }
 
     .output{
       white-space:pre-wrap;
       line-height:1.9;
-      font-size:16px;
-      min-height:320px;
+      font-size:17px;
+      min-height:220px;
     }
 
     .assumption-panel{
       margin-top:14px;
-      border:1px solid var(--line);
-      border-radius:14px;
-      padding:14px;
-      background:#fcfcff;
+      border-top:1px dashed var(--line);
+      padding-top:14px;
     }
 
     .assumption-panel.hidden{
@@ -286,32 +219,26 @@
     .assumption-list{
       display:grid;
       gap:10px;
-      margin-top:12px;
+      margin-top:8px;
     }
 
     .assumption-item{
-      border:1px solid #e5e7eb;
-      border-radius:12px;
+      border:1px solid var(--line);
+      border-radius:16px;
       padding:12px;
       background:#fff;
     }
 
-    .assumption-head{
-      display:flex;
-      justify-content:space-between;
-      gap:12px;
-      align-items:flex-start;
-      margin-bottom:8px;
-    }
-
     .assumption-key{
-      font-weight:700;
-      font-size:14px;
+      font-size:15px;
+      font-weight:900;
+      margin-bottom:4px;
     }
 
     .assumption-meta{
       font-size:12px;
       color:var(--muted);
+      margin-bottom:8px;
     }
 
     .assumption-desc{
@@ -321,126 +248,100 @@
       margin-bottom:8px;
     }
 
-    .mini{
+    .mini-note{
       font-size:13px;
       color:var(--muted);
       line-height:1.7;
+      margin-bottom:10px;
     }
 
-    .small-actions{
-      display:flex;
-      gap:8px;
-      flex-wrap:wrap;
-      margin-top:12px;
-    }
+    @media (max-width: 640px){
+      .title{
+        font-size:28px;
+      }
 
-    .split{
-      display:grid;
-      grid-template-columns:1fr;
-      gap:16px;
-    }
+      .topbar{
+        grid-template-columns: 1fr 1fr;
+      }
 
-    @media (min-width: 980px){
-      .split{
-        grid-template-columns:1fr 1fr;
+      .topbar .field{
+        grid-column:1 / -1;
+      }
+
+      .mode-btn{
+        width:100%;
+      }
+
+      .section-title{
+        font-size:22px;
+      }
+
+      .output{
+        font-size:16px;
       }
     }
   </style>
 </head>
 <body>
   <div class="wrap">
-    <div class="card">
-      <h1>珍問・文章題 AI 完成版</h1>
-      <p class="lead">
-        まず AI が必要な数値と前提候補を整理し、そのあとユーザーが前提を確定してから計算します。
-        答えだけでなく、使った数値、理屈、途中計算、式、結論まで見えるようにした版です。
-      </p>
+    <h1 class="title">問題と人力</h1>
+
+    <div class="topbar">
+      <div class="field">
+        <label for="passcode">パスコード</label>
+        <input type="password" id="passcode" placeholder="パスコードを入力" />
+      </div>
+      <button class="mode-btn active" id="modeWeirdBtn" type="button">珍問</button>
+      <button class="mode-btn" id="modeKidBtn" type="button">小学生</button>
     </div>
 
-    <div class="split">
-      <div>
-        <div class="card">
-          <h2>1. 問題を入力</h2>
+    <section class="section">
+      <h2 class="section-title">1. 問題文</h2>
 
-          <label for="passcode">パスコード</label>
-          <input type="password" id="passcode" placeholder="パスコードを入力" />
-
-          <div class="mode-wrap" style="margin-top:14px;">
-            <button class="mode-btn active" id="modeWeirdBtn" type="button">珍問モード</button>
-            <button class="mode-btn" id="modeKidBtn" type="button">小学生モード</button>
-          </div>
-
-          <label for="question">問題文</label>
-          <textarea id="question" placeholder="例：
+      <textarea id="question" placeholder="例：
 富士山で琵琶湖を埋められるか？
 25mプールに一万円札を敷き詰めたら何枚必要か？
 りんごが5個あります。3個食べました。残りはいくつですか？"></textarea>
 
-          <div class="row" style="margin-top:14px;">
-            <button class="secondary" id="prepareBtn">前提候補を出す</button>
-            <button class="ghost" id="clearBtn">クリア</button>
-          </div>
-
-          <div class="status" id="status">待機中です。</div>
-
-          <div class="box">
-            <strong>流れ</strong><br>
-            1. パスコードを入力<br>
-            2. 問題を入力<br>
-            3. AIが前提候補を出す<br>
-            4. 必要ならユーザーが前提を書き換える<br>
-            5. 確定した前提で計算する
-          </div>
-
-          <div class="preset">
-            <button type="button" class="chip" data-q="富士山で琵琶湖を埋められるか？">富士山で琵琶湖を埋められるか？</button>
-            <button type="button" class="chip" data-q="25mプールに一万円札を敷き詰めたら何枚必要か？">25mプールに一万円札を敷き詰めたら何枚必要か？</button>
-            <button type="button" class="chip" data-q="25mプールに一万円札を体積で詰めたら何枚必要か？">25mプールに一万円札を体積で詰めたら何枚必要か？</button>
-            <button type="button" class="chip" data-q="地球から月まで毎日40km歩いたら何日かかる？">地球から月まで毎日40km歩いたら何日かかる？</button>
-            <button type="button" class="chip" data-q="りんごが5個あります。3個食べました。残りはいくつですか？">りんごが5個あります。3個食べました。残りはいくつですか？</button>
-          </div>
-        </div>
-
-        <div class="card">
-          <h2>2. 前提をユーザーが確定</h2>
-
-          <div id="prepareBadge"></div>
-
-          <div class="output" id="prepareSummary">ここに、AIが整理した前提候補の要約が表示されます。</div>
-
-          <div class="assumption-panel hidden" id="assumptionPanel">
-            <div class="mini">
-              下の欄は、AIが出した前提候補です。必要なら値や表現を書き換えてください。
-              そのままでよければ何も変えずに計算して大丈夫です。
-            </div>
-
-            <div class="assumption-list" id="assumptionList"></div>
-
-            <div class="small-actions">
-              <button class="primary" id="solveBtn">この前提で計算する</button>
-              <button class="danger" id="resetAssumptionsBtn">前提候補を消す</button>
-            </div>
-          </div>
-        </div>
+      <div class="actions">
+        <button class="action primary" id="prepareBtn">開く</button>
+        <button class="action ghost" id="clearBtn">クリア</button>
       </div>
 
-      <div>
-        <div class="card">
-          <h2>3. 計算結果</h2>
-          <div id="resultBadge"></div>
-          <div class="output" id="resultOutput">ここに、途中経過・式・結論が表示されます。</div>
-          <div class="hint">
-            ※ この版では、AIが出した前提候補をユーザーが最終確定してから計算します。<br>
-            ※ 探せない場合は、無理に作り話をせず理由つきで止まります。<br>
-            ※ 小学生モードでは、できるだけやさしい言い方にします。
-          </div>
+      <div class="status" id="status">待機中です。</div>
+    </section>
+
+    <section class="section">
+      <h2 class="section-title">2. 前提をユーザーが確定</h2>
+
+      <div id="prepareBadge"></div>
+      <div class="output" id="prepareSummary">ここに、AIが整理した前提候補の要約が表示されます。</div>
+
+      <div class="assumption-panel hidden" id="assumptionPanel">
+        <div class="mini-note">
+          必要なら下の値や言い方を修正してください。修正しなければ、そのままの前提で計算します。
+        </div>
+
+        <div class="assumption-list" id="assumptionList"></div>
+
+        <div class="actions">
+          <button class="action primary" id="solveBtn">この前提で計算する</button>
+          <button class="action danger" id="resetAssumptionsBtn">前提候補を消す</button>
         </div>
       </div>
-    </div>
+    </section>
+
+    <section class="section">
+      <h2 class="section-title">3. 計算結果</h2>
+
+      <div id="resultBadge"></div>
+      <div class="output" id="resultOutput">ここに、途中経過・式・結論が表示されます。</div>
+    </section>
   </div>
 
   <script>
     const WORKER_URL = "https://cal.gudafutanu.workers.dev/solve";
+    // 例: https://your-worker-name.your-subdomain.workers.dev/solve
 
     let currentMode = "weird";
     let preparedData = null;
@@ -465,8 +366,6 @@
 
     const resultOutputEl = document.getElementById("resultOutput");
     const resultBadgeEl = document.getElementById("resultBadge");
-
-    const chips = document.querySelectorAll(".chip");
 
     function setStatus(msg){
       statusEl.textContent = msg;
@@ -567,12 +466,8 @@
         const editable = item.editable !== false;
 
         wrap.innerHTML = `
-          <div class="assumption-head">
-            <div>
-              <div class="assumption-key">${escapeHtml(label)}</div>
-              <div class="assumption-meta">key: ${escapeHtml(key)} ${unit ? " / 単位: " + escapeHtml(unit) : ""}</div>
-            </div>
-          </div>
+          <div class="assumption-key">${escapeHtml(label)}</div>
+          <div class="assumption-meta">key: ${escapeHtml(key)} ${unit ? " / 単位: " + escapeHtml(unit) : ""}</div>
           <div class="assumption-desc">${escapeHtml(description)}</div>
           <input
             type="text"
@@ -748,7 +643,7 @@
       }
 
       if (!preparedData) {
-        setStatus("先に「前提候補を出す」を押してください。");
+        setStatus("先に「開く」を押してください。");
         return;
       }
 
@@ -814,13 +709,6 @@
     solveBtn.addEventListener("click", callSolve);
     clearBtn.addEventListener("click", clearAll);
     resetAssumptionsBtn.addEventListener("click", resetAssumptions);
-
-    chips.forEach(chip => {
-      chip.addEventListener("click", () => {
-        questionEl.value = chip.dataset.q || "";
-        questionEl.focus();
-      });
-    });
   </script>
 </body>
 </html>
