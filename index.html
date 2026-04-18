@@ -2,487 +2,825 @@
 <html lang="ja">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-  <title>条件整理型 計算AI</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>珍問・文章題 AI 完成版</title>
   <style>
     :root{
-      --bg1:#0f172a;
-      --bg2:#1e293b;
+      --bg:#f6f7fb;
       --card:#ffffff;
-      --text:#0f172a;
-      --muted:#64748b;
-      --line:#e2e8f0;
-      --accent:#2563eb;
-      --accent2:#7c3aed;
-      --shadow:0 18px 44px rgba(2,6,23,.22);
-      --radius:22px;
+      --line:#d9dfeb;
+      --text:#1f2937;
+      --muted:#6b7280;
+      --accent:#4f46e5;
+      --accent2:#4338ca;
+      --soft:#eef2ff;
+      --ok:#0f766e;
+      --okbg:#ecfdf5;
+      --warn:#b45309;
+      --warnbg:#fffbeb;
+      --bad:#b91c1c;
+      --badbg:#fef2f2;
+      --shadow:0 10px 30px rgba(0,0,0,.05);
+      --radius:18px;
     }
-    *{ box-sizing:border-box; }
-    html,body{
+
+    *{box-sizing:border-box}
+
+    body{
       margin:0;
-      padding:0;
-      min-height:100%;
-      background:linear-gradient(180deg,var(--bg1),var(--bg2));
-      font-family:-apple-system,BlinkMacSystemFont,"Hiragino Sans","Yu Gothic","Noto Sans JP",sans-serif;
-      color:#fff;
-      -webkit-text-size-adjust:100%;
+      background:var(--bg);
+      color:var(--text);
+      font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Hiragino Sans","Yu Gothic UI","Yu Gothic",Meiryo,sans-serif;
     }
-    body{ min-height:100vh; }
-    .app{
-      max-width:720px;
+
+    .wrap{
+      max-width:1100px;
       margin:0 auto;
-      padding:max(12px, env(safe-area-inset-top)) 12px max(18px, env(safe-area-inset-bottom)) 12px;
+      padding:18px;
     }
-    .hero{
-      text-align:center;
-      padding:4px 6px 8px;
-    }
-    .title{
-      font-size:28px;
-      font-weight:900;
-      margin:0 0 6px;
-    }
-    .subtitle{
-      font-size:13px;
-      color:rgba(255,255,255,.78);
-      margin:0;
-      line-height:1.6;
-    }
+
     .card{
       background:var(--card);
-      color:var(--text);
+      border:1px solid var(--line);
       border-radius:var(--radius);
       box-shadow:var(--shadow);
-      overflow:hidden;
+      padding:18px;
+      margin-bottom:16px;
     }
-    .content-card{
-      margin-top:10px;
-      padding:12px;
-    }
-    .label{
-      font-size:13px;
-      font-weight:900;
-      color:#334155;
+
+    h1{
       margin:0 0 8px;
+      font-size:28px;
+      line-height:1.35;
     }
-    .pass-row{
-      display:flex;
-      gap:8px;
-      align-items:center;
-      flex-wrap:wrap;
-      margin-bottom:12px;
+
+    h2{
+      margin:0 0 12px;
+      font-size:20px;
     }
-    input[type="password"]{
-      flex:1;
-      min-width:180px;
-      border:1.5px solid var(--line);
-      border-radius:14px;
-      padding:12px 14px;
-      font-size:16px;
-      outline:none;
-      background:#fff;
-      color:#0f172a;
+
+    .lead{
+      margin:0;
+      color:var(--muted);
+      line-height:1.8;
+      font-size:15px;
     }
-    input[type="password"]:focus,
-    textarea:focus{
-      border-color:#93c5fd;
-      box-shadow:0 0 0 4px rgba(37,99,235,.10);
+
+    .grid{
+      display:grid;
+      grid-template-columns:1fr;
+      gap:16px;
     }
+
+    @media (min-width: 980px){
+      .grid{
+        grid-template-columns:1fr 1fr;
+      }
+    }
+
+    label{
+      display:block;
+      font-size:14px;
+      font-weight:700;
+      margin-bottom:8px;
+    }
+
     textarea{
       width:100%;
-      min-height:132px;
+      min-height:180px;
       resize:vertical;
-      border:1.5px solid var(--line);
-      border-radius:16px;
+      border:1px solid var(--line);
+      border-radius:14px;
       padding:14px;
-      font-size:16px;
-      line-height:1.6;
+      font-size:17px;
+      line-height:1.8;
+      background:#fff;
+      outline:none;
+    }
+
+    textarea:focus,
+    input[type="text"]:focus,
+    input[type="password"]:focus{
+      border-color:var(--accent);
+      box-shadow:0 0 0 4px rgba(79,70,229,.12);
+    }
+
+    input[type="text"],
+    input[type="password"]{
+      width:100%;
+      border:1px solid var(--line);
+      border-radius:12px;
+      padding:10px 12px;
+      font-size:15px;
       outline:none;
       background:#fff;
-      color:#0f172a;
     }
-    .btn-row{
+
+    .row{
       display:flex;
-      gap:10px;
-      margin-top:12px;
       flex-wrap:wrap;
-    }
-    button{
-      appearance:none;
-      border:none;
-      border-radius:14px;
-      padding:13px 16px;
-      font-size:16px;
-      font-weight:900;
-      cursor:pointer;
-      transition:transform .08s ease, opacity .18s ease, box-shadow .18s ease, background .18s ease;
-    }
-    button:active{ transform:translateY(1px) scale(.995); }
-    .primary{
-      flex:1;
-      min-width:150px;
-      color:#fff;
-      background:linear-gradient(135deg,var(--accent),var(--accent2));
-      box-shadow:0 8px 20px rgba(37,99,235,.28);
-    }
-    .secondary{
-      background:#eef2ff;
-      color:#3730a3;
-    }
-    .ghost{
-      background:#f8fafc;
-      color:#334155;
-      border:1px solid var(--line);
-    }
-    .mic-btn{
-      background:#eff6ff;
-      color:#1d4ed8;
-      border:1px solid #bfdbfe;
-    }
-    .mic-btn.listening{
-      background:#fee2e2;
-      color:#b91c1c;
-      border:1px solid #fecaca;
-    }
-    .speak-btn{
-      background:#f5f3ff;
-      color:#6d28d9;
-      border:1px solid #ddd6fe;
-    }
-    .live-banner{
-      display:none;
-      margin-top:12px;
-      padding:14px;
-      border-radius:18px;
-      background:linear-gradient(135deg, rgba(14,165,233,.18), rgba(37,99,235,.14)), linear-gradient(180deg, #f8fbff, #eef6ff);
-      border:1px solid rgba(56,189,248,.38);
-      box-shadow: inset 0 1px 0 rgba(255,255,255,.65);
-    }
-    .live-banner.show{ display:block; }
-    .live-head{
-      display:flex;
-      align-items:center;
       gap:10px;
-      margin-bottom:6px;
+      align-items:center;
     }
-    .live-dot{
-      width:12px;
-      height:12px;
+
+    .mode-wrap{
+      display:flex;
+      gap:8px;
+      flex-wrap:wrap;
+      margin-bottom:14px;
+    }
+
+    .mode-btn{
+      border:1px solid var(--line);
+      background:#fff;
+      color:var(--text);
+      padding:10px 14px;
       border-radius:999px;
-      background:#0ea5e9;
-      box-shadow:0 0 0 0 rgba(14,165,233,.58);
-      animation:pulse 1.4s infinite;
-      flex:0 0 12px;
-    }
-    @keyframes pulse{
-      0% { box-shadow:0 0 0 0 rgba(14,165,233,.58); }
-      70% { box-shadow:0 0 0 14px rgba(14,165,233,0); }
-      100% { box-shadow:0 0 0 0 rgba(14,165,233,0); }
-    }
-    .live-title{
-      font-size:13px;
-      font-weight:900;
-      letter-spacing:.08em;
-      color:#0c4a6e;
-    }
-    .live-text{
-      font-size:13px;
-      color:#0f172a;
-      line-height:1.6;
+      font-size:14px;
       font-weight:700;
+      cursor:pointer;
     }
-    .reply-card{
-      margin-top:10px;
-      padding:12px;
+
+    .mode-btn.active{
+      background:var(--soft);
+      color:var(--accent2);
+      border-color:#c7d2fe;
     }
-    .bubble{
-      border-radius:18px;
-      padding:12px 14px;
-      line-height:1.72;
+
+    button{
+      border:none;
+      border-radius:12px;
+      padding:12px 18px;
       font-size:15px;
-      white-space:pre-wrap;
-      word-break:break-word;
+      font-weight:700;
+      cursor:pointer;
+      transition:.18s ease;
     }
-    .bubble + .bubble{ margin-top:10px; }
-    .bubble.user{
-      background:#eff6ff;
-      color:#1e3a8a;
-      border:1px solid #dbeafe;
+
+    button:hover{ transform:translateY(-1px); }
+    button:active{ transform:translateY(0); }
+    button:disabled{
+      opacity:.6;
+      cursor:not-allowed;
+      transform:none;
     }
-    .bubble.ai{
-      background:#f8fafc;
-      color:#0f172a;
-      border:1px solid #e2e8f0;
+
+    .primary{
+      background:var(--accent);
+      color:#fff;
     }
-    .bubble.system{
-      background:#fff7ed;
-      color:#9a3412;
-      border:1px solid #fed7aa;
+
+    .primary:hover{
+      background:var(--accent2);
     }
-    .footer-note{
+
+    .secondary{
+      background:var(--soft);
+      color:var(--accent2);
+    }
+
+    .ghost{
+      background:#f3f4f6;
+      color:#374151;
+    }
+
+    .danger{
+      background:#fff1f2;
+      color:#be123c;
+      border:1px solid #fecdd3;
+    }
+
+    .status{
+      margin-top:12px;
+      min-height:24px;
+      font-size:14px;
+      color:var(--muted);
+    }
+
+    .hint{
+      margin-top:12px;
+      color:var(--muted);
+      font-size:14px;
+      line-height:1.8;
+    }
+
+    .box{
+      background:#f9fafb;
+      border:1px dashed var(--line);
+      border-radius:12px;
+      padding:12px;
+      margin-top:12px;
+      font-size:14px;
+      line-height:1.8;
+      color:#374151;
+    }
+
+    .preset{
+      display:flex;
+      flex-wrap:wrap;
+      gap:8px;
       margin-top:10px;
+    }
+
+    .chip{
+      border:1px solid var(--line);
+      background:#fff;
+      color:#374151;
+      border-radius:999px;
+      padding:8px 12px;
+      cursor:pointer;
+      font-size:13px;
+    }
+
+    .chip:hover{
+      background:#f8fafc;
+    }
+
+    .pill{
+      display:inline-block;
+      padding:5px 10px;
+      border-radius:999px;
+      font-size:13px;
+      font-weight:700;
+      margin-bottom:10px;
+      border:1px solid transparent;
+    }
+
+    .pill.ok{
+      background:var(--okbg);
+      color:var(--ok);
+      border-color:#a7f3d0;
+    }
+
+    .pill.warn{
+      background:var(--warnbg);
+      color:var(--warn);
+      border-color:#fde68a;
+    }
+
+    .pill.bad{
+      background:var(--badbg);
+      color:var(--bad);
+      border-color:#fecaca;
+    }
+
+    .output{
+      white-space:pre-wrap;
+      line-height:1.9;
+      font-size:16px;
+      min-height:320px;
+    }
+
+    .assumption-panel{
+      margin-top:14px;
+      border:1px solid var(--line);
+      border-radius:14px;
+      padding:14px;
+      background:#fcfcff;
+    }
+
+    .assumption-panel.hidden{
+      display:none;
+    }
+
+    .assumption-list{
+      display:grid;
+      gap:10px;
+      margin-top:12px;
+    }
+
+    .assumption-item{
+      border:1px solid #e5e7eb;
+      border-radius:12px;
+      padding:12px;
+      background:#fff;
+    }
+
+    .assumption-head{
+      display:flex;
+      justify-content:space-between;
+      gap:12px;
+      align-items:flex-start;
+      margin-bottom:8px;
+    }
+
+    .assumption-key{
+      font-weight:700;
+      font-size:14px;
+    }
+
+    .assumption-meta{
       font-size:12px;
-      color:rgba(255,255,255,.75);
-      text-align:center;
-      line-height:1.6;
+      color:var(--muted);
+    }
+
+    .assumption-desc{
+      font-size:13px;
+      color:#4b5563;
+      line-height:1.7;
+      margin-bottom:8px;
+    }
+
+    .mini{
+      font-size:13px;
+      color:var(--muted);
+      line-height:1.7;
+    }
+
+    .small-actions{
+      display:flex;
+      gap:8px;
+      flex-wrap:wrap;
+      margin-top:12px;
+    }
+
+    .split{
+      display:grid;
+      grid-template-columns:1fr;
+      gap:16px;
+    }
+
+    @media (min-width: 980px){
+      .split{
+        grid-template-columns:1fr 1fr;
+      }
     }
   </style>
 </head>
 <body>
-  <div class="app">
-    <div class="hero">
-      <h1 class="title">条件整理型 計算AI</h1>
-      <p class="subtitle">条件が足りなければ確認し、そろったら式で答えます</p>
+  <div class="wrap">
+    <div class="card">
+      <h1>珍問・文章題 AI 完成版</h1>
+      <p class="lead">
+        まず AI が必要な数値と前提候補を整理し、そのあとユーザーが前提を確定してから計算します。
+        答えだけでなく、使った数値、理屈、途中計算、式、結論まで見えるようにした版です。
+      </p>
     </div>
 
-    <section class="card content-card">
-      <div class="label">パスコード</div>
-      <div class="pass-row">
-        <input type="password" id="passcodeInput" placeholder="パスコードを入力" />
-        <button class="secondary" id="savePassBtn" type="button">保存</button>
-      </div>
+    <div class="split">
+      <div>
+        <div class="card">
+          <h2>1. 問題を入力</h2>
 
-      <div class="label">質問</div>
-      <textarea id="userInput" placeholder="例：宝くじが10枚あります。この10枚が1等に当たる確率は？
-例：1億円を10年で使い切ると1日いくら使えますか？
-例：月まで歩くと何日かかりますか？"></textarea>
+          <label for="passcode">パスコード</label>
+          <input type="password" id="passcode" placeholder="パスコードを入力" />
 
-      <div class="btn-row">
-        <button class="mic-btn" id="micBtn" type="button">🎤 話す</button>
-        <button class="primary" id="sendBtn" type="button">送る</button>
-      </div>
+          <div class="mode-wrap" style="margin-top:14px;">
+            <button class="mode-btn active" id="modeWeirdBtn" type="button">珍問モード</button>
+            <button class="mode-btn" id="modeKidBtn" type="button">小学生モード</button>
+          </div>
 
-      <div class="btn-row">
-        <button class="speak-btn" id="speakBtn" type="button">🔊 答えを聞く</button>
-        <button class="secondary" id="retryBtn" type="button">もう一度聞く</button>
-        <button class="ghost" id="clearBtn" type="button">クリア</button>
-      </div>
+          <label for="question">問題文</label>
+          <textarea id="question" placeholder="例：
+富士山で琵琶湖を埋められるか？
+25mプールに一万円札を敷き詰めたら何枚必要か？
+りんごが5個あります。3個食べました。残りはいくつですか？"></textarea>
 
-      <div id="liveBanner" class="live-banner">
-        <div class="live-head">
-          <div class="live-dot"></div>
-          <div class="live-title">分析中</div>
+          <div class="row" style="margin-top:14px;">
+            <button class="secondary" id="prepareBtn">前提候補を出す</button>
+            <button class="ghost" id="clearBtn">クリア</button>
+          </div>
+
+          <div class="status" id="status">待機中です。</div>
+
+          <div class="box">
+            <strong>流れ</strong><br>
+            1. パスコードを入力<br>
+            2. 問題を入力<br>
+            3. AIが前提候補を出す<br>
+            4. 必要ならユーザーが前提を書き換える<br>
+            5. 確定した前提で計算する
+          </div>
+
+          <div class="preset">
+            <button type="button" class="chip" data-q="富士山で琵琶湖を埋められるか？">富士山で琵琶湖を埋められるか？</button>
+            <button type="button" class="chip" data-q="25mプールに一万円札を敷き詰めたら何枚必要か？">25mプールに一万円札を敷き詰めたら何枚必要か？</button>
+            <button type="button" class="chip" data-q="25mプールに一万円札を体積で詰めたら何枚必要か？">25mプールに一万円札を体積で詰めたら何枚必要か？</button>
+            <button type="button" class="chip" data-q="地球から月まで毎日40km歩いたら何日かかる？">地球から月まで毎日40km歩いたら何日かかる？</button>
+            <button type="button" class="chip" data-q="りんごが5個あります。3個食べました。残りはいくつですか？">りんごが5個あります。3個食べました。残りはいくつですか？</button>
+          </div>
         </div>
-        <div class="live-text">条件を整理し、必要なら確認し、計算可能なら式を作っています…</div>
-      </div>
-    </section>
 
-    <section class="card reply-card">
-      <div id="chatArea">
-        <div class="bubble system">ここにAIの確認質問や計算結果が表示されます。</div>
-      </div>
-    </section>
+        <div class="card">
+          <h2>2. 前提をユーザーが確定</h2>
 
-    <div class="footer-note">
-      結論 / 根拠データ / 計算式 / 判定 の形で返します
+          <div id="prepareBadge"></div>
+
+          <div class="output" id="prepareSummary">ここに、AIが整理した前提候補の要約が表示されます。</div>
+
+          <div class="assumption-panel hidden" id="assumptionPanel">
+            <div class="mini">
+              下の欄は、AIが出した前提候補です。必要なら値や表現を書き換えてください。
+              そのままでよければ何も変えずに計算して大丈夫です。
+            </div>
+
+            <div class="assumption-list" id="assumptionList"></div>
+
+            <div class="small-actions">
+              <button class="primary" id="solveBtn">この前提で計算する</button>
+              <button class="danger" id="resetAssumptionsBtn">前提候補を消す</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div>
+        <div class="card">
+          <h2>3. 計算結果</h2>
+          <div id="resultBadge"></div>
+          <div class="output" id="resultOutput">ここに、途中経過・式・結論が表示されます。</div>
+          <div class="hint">
+            ※ この版では、AIが出した前提候補をユーザーが最終確定してから計算します。<br>
+            ※ 探せない場合は、無理に作り話をせず理由つきで止まります。<br>
+            ※ 小学生モードでは、できるだけやさしい言い方にします。
+          </div>
+        </div>
+      </div>
     </div>
   </div>
 
   <script>
-    const WORKER_URL = "https://cal.gudafutanu.workers.dev/measure";
+    const WORKER_URL = "ここにWorkerのURLを入れてください";
 
-    const userInput = document.getElementById("userInput");
-    const passcodeInput = document.getElementById("passcodeInput");
-    const savePassBtn = document.getElementById("savePassBtn");
+    let currentMode = "weird";
+    let preparedData = null;
 
-    const sendBtn = document.getElementById("sendBtn");
-    const retryBtn = document.getElementById("retryBtn");
+    const passcodeEl = document.getElementById("passcode");
+    const questionEl = document.getElementById("question");
+    const statusEl = document.getElementById("status");
+
+    const modeWeirdBtn = document.getElementById("modeWeirdBtn");
+    const modeKidBtn = document.getElementById("modeKidBtn");
+
+    const prepareBtn = document.getElementById("prepareBtn");
     const clearBtn = document.getElementById("clearBtn");
-    const micBtn = document.getElementById("micBtn");
-    const speakBtn = document.getElementById("speakBtn");
-    const chatArea = document.getElementById("chatArea");
-    const liveBanner = document.getElementById("liveBanner");
+    const solveBtn = document.getElementById("solveBtn");
+    const resetAssumptionsBtn = document.getElementById("resetAssumptionsBtn");
 
-    let history = [];
-    let lastAiText = "";
-    let recognition = null;
-    let listening = false;
+    const prepareSummaryEl = document.getElementById("prepareSummary");
+    const prepareBadgeEl = document.getElementById("prepareBadge");
 
-    function addBubble(role, text) {
+    const assumptionPanelEl = document.getElementById("assumptionPanel");
+    const assumptionListEl = document.getElementById("assumptionList");
+
+    const resultOutputEl = document.getElementById("resultOutput");
+    const resultBadgeEl = document.getElementById("resultBadge");
+
+    const chips = document.querySelectorAll(".chip");
+
+    function setStatus(msg){
+      statusEl.textContent = msg;
+    }
+
+    function setBadge(target, type, text){
+      target.innerHTML = "";
+      if (!text) return;
       const div = document.createElement("div");
-      div.className = "bubble " + role;
+      div.className = `pill ${type}`;
       div.textContent = text;
-      chatArea.appendChild(div);
-      chatArea.scrollTop = chatArea.scrollHeight;
+      target.appendChild(div);
     }
 
-    function clearChat() {
-      chatArea.innerHTML = "";
-      addBubble("system", "ここにAIの確認質問や計算結果が表示されます。");
+    function setMode(mode){
+      currentMode = mode;
+      modeWeirdBtn.classList.toggle("active", mode === "weird");
+      modeKidBtn.classList.toggle("active", mode === "kid");
+
+      if (mode === "weird") {
+        questionEl.placeholder = `例：
+富士山で琵琶湖を埋められるか？
+25mプールに一万円札を敷き詰めたら何枚必要か？
+25mプールに一万円札を体積で詰めたら何枚必要か？`;
+      } else {
+        questionEl.placeholder = `例：
+りんごが5個あります。3個食べました。残りはいくつですか？
+100円のえんぴつを3本買いました。代金はいくらですか？
+12個のあめを4人で同じ数ずつ分けると1人何個ですか？`;
+      }
     }
 
-    function setBusy(flag) {
-      sendBtn.disabled = flag;
-      retryBtn.disabled = flag;
-      sendBtn.style.opacity = flag ? ".7" : "1";
-      retryBtn.style.opacity = flag ? ".7" : "1";
-      liveBanner.classList.toggle("show", flag);
+    function escapeHtml(str){
+      return String(str)
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;");
     }
 
-    function getSavedPasscode() {
-      return localStorage.getItem("calc_ai_passcode") || "";
+    function renderPrepare(data){
+      preparedData = data;
+
+      const lines = [];
+      lines.push("【問題】");
+      lines.push(data.question || "");
+      lines.push("");
+
+      if (data.problem_type) {
+        lines.push("【問題のタイプ】");
+        lines.push(data.problem_type);
+        lines.push("");
+      }
+
+      lines.push("【AIが考えた解き方】");
+      lines.push(data.plan || "まだ整理できませんでした。");
+      lines.push("");
+
+      lines.push("【確認】");
+      lines.push(data.confirmation_message || "下の前提候補を確認してください。");
+
+      if (Array.isArray(data.missing_conditions) && data.missing_conditions.length) {
+        lines.push("");
+        lines.push("【結果が変わるポイント】");
+        data.missing_conditions.forEach(v => lines.push(`・${v}`));
+      }
+
+      prepareSummaryEl.textContent = lines.join("\n");
+
+      if (data.ready_to_solve) {
+        setBadge(prepareBadgeEl, "warn", "前提候補を確認してください");
+      } else {
+        setBadge(prepareBadgeEl, "bad", "このままでは計算できません");
+      }
+
+      renderAssumptionInputs(data.assumptions || []);
     }
 
-    function savePasscode() {
-      localStorage.setItem("calc_ai_passcode", passcodeInput.value.trim());
-    }
+    function renderAssumptionInputs(assumptions){
+      assumptionListEl.innerHTML = "";
 
-    function speakText(text) {
-      if (!text) {
-        alert("まだ結果がありません。");
+      if (!Array.isArray(assumptions) || assumptions.length === 0) {
+        assumptionPanelEl.classList.add("hidden");
         return;
       }
-      if (!("speechSynthesis" in window)) {
-        alert("この端末では読み上げに対応していません。");
-        return;
-      }
-      window.speechSynthesis.cancel();
-      const utter = new SpeechSynthesisUtterance(text);
-      utter.lang = "ja-JP";
-      utter.rate = 1;
-      utter.pitch = 1;
-      window.speechSynthesis.speak(utter);
+
+      assumptionPanelEl.classList.remove("hidden");
+
+      assumptions.forEach((item, index) => {
+        const wrap = document.createElement("div");
+        wrap.className = "assumption-item";
+
+        const key = item.key || `assumption_${index + 1}`;
+        const label = item.label || key;
+        const value = item.value ?? "";
+        const unit = item.unit || "";
+        const description = item.description || "";
+        const editable = item.editable !== false;
+
+        wrap.innerHTML = `
+          <div class="assumption-head">
+            <div>
+              <div class="assumption-key">${escapeHtml(label)}</div>
+              <div class="assumption-meta">key: ${escapeHtml(key)} ${unit ? " / 単位: " + escapeHtml(unit) : ""}</div>
+            </div>
+          </div>
+          <div class="assumption-desc">${escapeHtml(description)}</div>
+          <input
+            type="text"
+            data-key="${escapeHtml(key)}"
+            data-label="${escapeHtml(label)}"
+            data-unit="${escapeHtml(unit)}"
+            data-description="${escapeHtml(description)}"
+            value="${escapeHtml(value)}"
+            ${editable ? "" : "readonly"}
+          />
+        `;
+
+        assumptionListEl.appendChild(wrap);
+      });
     }
 
-    function setupRecognition() {
-      const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
-      if (!SR) return null;
-
-      const rec = new SR();
-      rec.lang = "ja-JP";
-      rec.interimResults = false;
-      rec.continuous = false;
-
-      rec.onstart = () => {
-        listening = true;
-        micBtn.classList.add("listening");
-        micBtn.textContent = "🔴 聞いています";
-      };
-
-      rec.onend = () => {
-        listening = false;
-        micBtn.classList.remove("listening");
-        micBtn.textContent = "🎤 話す";
-      };
-
-      rec.onerror = (e) => {
-        addBubble("system", "音声入力エラー: " + (e.error || "unknown"));
-      };
-
-      rec.onresult = (e) => {
-        const transcript = Array.from(e.results)
-          .map(result => result[0]?.transcript || "")
-          .join("")
-          .trim();
-        if (transcript) userInput.value = transcript;
-      };
-
-      return rec;
+    function collectAssumptionsFromUI(){
+      const inputs = assumptionListEl.querySelectorAll("input[data-key]");
+      return Array.from(inputs).map(input => ({
+        key: input.dataset.key || "",
+        label: input.dataset.label || "",
+        unit: input.dataset.unit || "",
+        description: input.dataset.description || "",
+        value: input.value.trim()
+      }));
     }
 
-    async function askAI() {
-      const text = userInput.value.trim();
-      const passcode = passcodeInput.value.trim() || getSavedPasscode();
+    function renderSolve(data){
+      const lines = [];
 
-      if (!text) {
-        alert("質問を入力してください。");
-        return;
+      lines.push("【問題】");
+      lines.push(data.question || "");
+      lines.push("");
+
+      if (data.problem_type) {
+        lines.push("【問題のタイプ】");
+        lines.push(data.problem_type);
+        lines.push("");
       }
+
+      if (Array.isArray(data.assumptions_used) && data.assumptions_used.length) {
+        lines.push("【使った前提】");
+        data.assumptions_used.forEach(v => lines.push(`・${v}`));
+        lines.push("");
+      }
+
+      if (Array.isArray(data.used_values) && data.used_values.length) {
+        lines.push("【使った数値】");
+        data.used_values.forEach(v => lines.push(`・${v}`));
+        lines.push("");
+      }
+
+      if (Array.isArray(data.reasoning_steps) && data.reasoning_steps.length) {
+        lines.push("【考え方の流れ】");
+        data.reasoning_steps.forEach((v, i) => lines.push(`${i + 1}. ${v}`));
+        lines.push("");
+      }
+
+      if (Array.isArray(data.calculation_steps) && data.calculation_steps.length) {
+        lines.push("【計算の途中】");
+        data.calculation_steps.forEach((v, i) => lines.push(`${i + 1}. ${v}`));
+        lines.push("");
+      }
+
+      if (data.final_formula) {
+        lines.push("【式】");
+        lines.push(data.final_formula);
+        lines.push("");
+      }
+
+      if (data.interpretation) {
+        lines.push("【この結果の意味】");
+        lines.push(data.interpretation);
+        lines.push("");
+      }
+
+      lines.push("【結論】");
+      lines.push(data.conclusion || "結論を出せませんでした。");
+
+      if (Array.isArray(data.notes) && data.notes.length) {
+        lines.push("");
+        lines.push("【補足】");
+        data.notes.forEach(v => lines.push(`・${v}`));
+      }
+
+      resultOutputEl.textContent = lines.join("\n");
+
+      if (data.can_answer) {
+        setBadge(resultBadgeEl, "ok", "途中経過つきで計算しました");
+      } else {
+        setBadge(resultBadgeEl, "bad", "計算できませんでした");
+      }
+    }
+
+    async function requestWorker(payload){
+      const passcode = passcodeEl.value.trim();
+
       if (!passcode) {
-        alert("先にパスコードを入力してください。");
+        throw new Error("パスコードを入力してください。");
+      }
+
+      const res = await fetch(WORKER_URL, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "X-App-Passcode": passcode
+        },
+        body: JSON.stringify(payload)
+      });
+
+      const text = await res.text();
+
+      let data;
+      try {
+        data = JSON.parse(text);
+      } catch {
+        throw new Error("Workerの返答がJSONではありません。\n\n" + text);
+      }
+
+      if (!res.ok || data.error) {
+        throw new Error(data.error || "エラーが発生しました。");
+      }
+
+      return data;
+    }
+
+    async function callPrepare(){
+      const question = questionEl.value.trim();
+
+      if (!question) {
+        setStatus("まず問題文を入力してください。");
+        setBadge(prepareBadgeEl, "bad", "入力が必要です");
+        prepareSummaryEl.textContent = "問題文が空です。";
         return;
       }
 
-      addBubble("user", text);
-      history.push({ role: "user", content: text });
-      userInput.value = "";
-
-      setBusy(true);
+      setStatus("前提候補を整理しています...");
+      prepareBtn.disabled = true;
+      solveBtn.disabled = true;
+      clearBtn.disabled = true;
+      resetAssumptionsBtn.disabled = true;
 
       try {
-        const res = await fetch(WORKER_URL, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            input: text,
-            history,
-            passcode
-          })
+        const data = await requestWorker({
+          action: "prepare",
+          mode: currentMode,
+          question
         });
 
-        const data = await res.json();
-
-        if (!res.ok) {
-          throw new Error(data.error || "通信エラー");
-        }
-
-        let outputText = "";
-
-        if (data.mode === "ask") {
-          outputText = data.question || "不足条件があります。";
-        } else if (data.mode === "answer") {
-          outputText = data.result || "結果なし";
-        } else {
-          outputText = JSON.stringify(data, null, 2);
-        }
-
-        addBubble("ai", outputText);
-        history.push({
-          role: "assistant",
-          content: outputText
-        });
-
-        lastAiText = outputText;
-
+        renderPrepare(data);
+        resultOutputEl.textContent = "ここに、途中経過・式・結論が表示されます。";
+        resultBadgeEl.innerHTML = "";
+        setStatus("前提候補を表示しました。");
       } catch (err) {
-        addBubble("system", "エラー: " + err.message);
+        console.error(err);
+        setBadge(prepareBadgeEl, "bad", "エラー");
+        prepareSummaryEl.textContent = "エラーが発生しました。\n\n" + (err.message || String(err));
+        setStatus("エラーが発生しました。");
       } finally {
-        setBusy(false);
+        prepareBtn.disabled = false;
+        solveBtn.disabled = false;
+        clearBtn.disabled = false;
+        resetAssumptionsBtn.disabled = false;
       }
     }
 
-    savePassBtn.addEventListener("click", savePasscode);
-    sendBtn.addEventListener("click", askAI);
+    async function callSolve(){
+      const question = questionEl.value.trim();
 
-    retryBtn.addEventListener("click", () => {
-      const lastUser = [...history].reverse().find(x => x.role === "user");
-      if (!lastUser) {
-        alert("まだ質問がありません。");
+      if (!question) {
+        setStatus("まず問題文を入力してください。");
         return;
       }
-      userInput.value = lastUser.content;
-      askAI();
-    });
 
-    clearBtn.addEventListener("click", () => {
-      history = [];
-      lastAiText = "";
-      userInput.value = "";
-      clearChat();
-      window.speechSynthesis?.cancel();
-    });
-
-    speakBtn.addEventListener("click", () => speakText(lastAiText));
-
-    micBtn.addEventListener("click", () => {
-      if (!recognition) {
-        alert("この端末では音声入力に対応していません。");
+      if (!preparedData) {
+        setStatus("先に「前提候補を出す」を押してください。");
         return;
       }
-      if (listening) {
-        recognition.stop();
-        return;
-      }
+
+      const finalAssumptions = collectAssumptionsFromUI();
+
+      setStatus("確定前提で計算しています...");
+      prepareBtn.disabled = true;
+      solveBtn.disabled = true;
+      clearBtn.disabled = true;
+      resetAssumptionsBtn.disabled = true;
+
       try {
-        recognition.start();
-      } catch (e) {
-        addBubble("system", "音声入力を開始できませんでした。もう一度押してください。");
-      }
-    });
+        const data = await requestWorker({
+          action: "solve",
+          mode: currentMode,
+          question,
+          assumptions: finalAssumptions
+        });
 
-    passcodeInput.value = getSavedPasscode();
-    recognition = setupRecognition();
-    clearChat();
+        renderSolve(data);
+        setStatus("計算結果を表示しました。");
+      } catch (err) {
+        console.error(err);
+        setBadge(resultBadgeEl, "bad", "エラー");
+        resultOutputEl.textContent = "エラーが発生しました。\n\n" + (err.message || String(err));
+        setStatus("エラーが発生しました。");
+      } finally {
+        prepareBtn.disabled = false;
+        solveBtn.disabled = false;
+        clearBtn.disabled = false;
+        resetAssumptionsBtn.disabled = false;
+      }
+    }
+
+    function resetAssumptions(){
+      preparedData = null;
+      assumptionListEl.innerHTML = "";
+      assumptionPanelEl.classList.add("hidden");
+      prepareSummaryEl.textContent = "ここに、AIが整理した前提候補の要約が表示されます。";
+      prepareBadgeEl.innerHTML = "";
+      resultOutputEl.textContent = "ここに、途中経過・式・結論が表示されます。";
+      resultBadgeEl.innerHTML = "";
+      setStatus("前提候補を消しました。");
+    }
+
+    function clearAll(){
+      questionEl.value = "";
+      preparedData = null;
+      prepareSummaryEl.textContent = "ここに、AIが整理した前提候補の要約が表示されます。";
+      resultOutputEl.textContent = "ここに、途中経過・式・結論が表示されます。";
+      prepareBadgeEl.innerHTML = "";
+      resultBadgeEl.innerHTML = "";
+      assumptionListEl.innerHTML = "";
+      assumptionPanelEl.classList.add("hidden");
+      setStatus("待機中です。");
+      questionEl.focus();
+    }
+
+    modeWeirdBtn.addEventListener("click", () => setMode("weird"));
+    modeKidBtn.addEventListener("click", () => setMode("kid"));
+
+    prepareBtn.addEventListener("click", callPrepare);
+    solveBtn.addEventListener("click", callSolve);
+    clearBtn.addEventListener("click", clearAll);
+    resetAssumptionsBtn.addEventListener("click", resetAssumptions);
+
+    chips.forEach(chip => {
+      chip.addEventListener("click", () => {
+        questionEl.value = chip.dataset.q || "";
+        questionEl.focus();
+      });
+    });
   </script>
 </body>
 </html>
