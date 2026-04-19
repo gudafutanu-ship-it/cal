@@ -1,1117 +1,389 @@
-<!DOCTYPE html>
-<html lang="ja">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>問題と人力</title>
+export default {
+  async fetch(request, env) {
+    const corsHeaders = {
+      "Access-Control-Allow-Origin": "*",
+      "Access-Control-Allow-Methods": "POST, OPTIONS",
+      "Access-Control-Allow-Headers": "Content-Type, X-App-Passcode",
+      "Content-Type": "application/json; charset=utf-8"
+    };
 
-  <link rel="manifest" href="manifest.json">
-  <meta name="theme-color" content="#4f46e5">
-  <link rel="apple-touch-icon" href="icon-180.png">
-  <meta name="apple-mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-status-bar-style" content="default">
-  <meta name="apple-mobile-web-app-title" content="問題と人力">
-
-  <style>
-    :root{
-      --bg:#f7f7fb;
-      --card:#ffffff;
-      --line:#d8ddea;
-      --text:#1f2937;
-      --muted:#6b7280;
-      --accent:#4f46e5;
-      --accent-soft:#eef2ff;
-      --danger:#ff5c5c;
-      --danger-soft:#fff1f2;
-      --ok:#0f766e;
-      --ok-soft:#ecfdf5;
-      --shadow:0 10px 28px rgba(0,0,0,.05);
+    if (request.method === "OPTIONS") {
+      return new Response(null, { status: 204, headers: corsHeaders });
     }
 
-    *{box-sizing:border-box}
+    const url = new URL(request.url);
 
-    body{
-      margin:0;
-      background:var(--bg);
-      color:var(--text);
-      font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Hiragino Sans","Yu Gothic UI","Yu Gothic",Meiryo,sans-serif;
+    if (url.pathname !== "/solve") {
+      return jsonResponse({ error: "Not Found" }, 404, corsHeaders);
     }
 
-    .wrap{
-      max-width:860px;
-      margin:0 auto;
-      padding:18px 14px 140px;
+    if (request.method !== "POST") {
+      return jsonResponse({ error: "POST only" }, 405, corsHeaders);
     }
 
-    .title{
-      font-size:32px;
-      font-weight:900;
-      margin:0 0 18px;
-      letter-spacing:.02em;
-    }
-
-    .pass-row{
-      display:grid;
-      grid-template-columns:auto 1fr;
-      gap:12px;
-      align-items:center;
-      margin-bottom:18px;
-    }
-
-    .pass-row label{
-      font-size:15px;
-      font-weight:800;
-      white-space:nowrap;
-    }
-
-    input[type="password"],
-    input[type="text"],
-    textarea{
-      width:100%;
-      border:2px solid var(--line);
-      border-radius:16px;
-      background:#fff;
-      outline:none;
-      font-size:16px;
-      padding:12px 14px;
-      transition:.18s ease;
-    }
-
-    input[type="password"]:focus,
-    input[type="text"]:focus,
-    textarea:focus{
-      border-color:var(--accent);
-      box-shadow:0 0 0 4px rgba(79,70,229,.10);
-    }
-
-    .section{
-      background:var(--card);
-      border:1px solid var(--line);
-      border-radius:24px;
-      box-shadow:var(--shadow);
-      padding:18px;
-      margin-bottom:18px;
-    }
-
-    .section-head{
-      display:flex;
-      align-items:center;
-      justify-content:space-between;
-      gap:12px;
-      margin-bottom:14px;
-    }
-
-    .section-title{
-      font-size:24px;
-      font-weight:900;
-      margin:0;
-    }
-
-    .speak-btn{
-      border:none;
-      background:#f3f4f6;
-      color:#374151;
-      border-radius:14px;
-      padding:10px 14px;
-      font-size:18px;
-      cursor:pointer;
-      font-weight:800;
-    }
-
-    .speak-btn:hover{
-      transform:translateY(-1px);
-    }
-
-    .mode-wrap{
-      display:flex;
-      gap:10px;
-      flex-wrap:wrap;
-      margin-bottom:14px;
-    }
-
-    .mode-btn{
-      border:2px solid var(--line);
-      background:#fff;
-      color:var(--text);
-      padding:10px 18px;
-      border-radius:16px;
-      font-size:15px;
-      font-weight:800;
-      cursor:pointer;
-    }
-
-    .mode-btn.active{
-      border-color:#c7d2fe;
-      background:var(--accent-soft);
-      color:var(--accent);
-    }
-
-    textarea{
-      min-height:200px;
-      resize:vertical;
-      line-height:1.8;
-    }
-
-    .actions{
-      display:flex;
-      gap:10px;
-      flex-wrap:wrap;
-      margin-top:12px;
-    }
-
-    button.action{
-      border:none;
-      border-radius:16px;
-      padding:13px 20px;
-      font-size:16px;
-      font-weight:800;
-      cursor:pointer;
-      transition:.18s ease;
-    }
-
-    button.action:hover{ transform:translateY(-1px); }
-    button.action:active{ transform:translateY(0); }
-    button.action:disabled{
-      opacity:.6;
-      cursor:not-allowed;
-      transform:none;
-    }
-
-    .primary{
-      background:var(--accent-soft);
-      color:var(--accent);
-    }
-
-    .ghost{
-      background:#f3f4f6;
-      color:#374151;
-    }
-
-    .danger{
-      background:#fff1f2;
-      color:#be123c;
-      border:1px solid #fecdd3;
-    }
-
-    .ok-btn{
-      background:var(--ok-soft);
-      color:var(--ok);
-      border:1px solid #a7f3d0;
-    }
-
-    .status{
-      min-height:24px;
-      margin-top:12px;
-      color:var(--muted);
-      font-size:14px;
-      font-weight:700;
-      line-height:1.7;
-    }
-
-    .pill{
-      display:inline-block;
-      padding:6px 12px;
-      border-radius:999px;
-      font-size:13px;
-      font-weight:900;
-      margin-bottom:10px;
-      border:1px solid transparent;
-    }
-
-    .pill.ok{
-      color:var(--ok);
-      background:var(--ok-soft);
-      border-color:#a7f3d0;
-    }
-
-    .pill.warn{
-      color:#b45309;
-      background:#fffbeb;
-      border-color:#fde68a;
-    }
-
-    .pill.bad{
-      color:#b91c1c;
-      background:#fef2f2;
-      border-color:#fecaca;
-    }
-
-    .output{
-      white-space:pre-wrap;
-      line-height:1.9;
-      font-size:17px;
-      min-height:260px;
-    }
-
-    .assumption-panel{
-      margin-top:14px;
-      border-top:1px dashed var(--line);
-      padding-top:14px;
-    }
-
-    .assumption-panel.hidden{
-      display:none;
-    }
-
-    .assumption-list{
-      display:grid;
-      gap:10px;
-      margin-top:8px;
-    }
-
-    .assumption-item{
-      border:1px solid var(--line);
-      border-radius:16px;
-      padding:12px;
-      background:#fff;
-    }
-
-    .assumption-key{
-      font-size:15px;
-      font-weight:900;
-      margin-bottom:4px;
-    }
-
-    .assumption-meta{
-      font-size:12px;
-      color:var(--muted);
-      margin-bottom:8px;
-    }
-
-    .assumption-desc{
-      font-size:13px;
-      color:#4b5563;
-      line-height:1.7;
-      margin-bottom:8px;
-    }
-
-    .mini-note{
-      font-size:13px;
-      color:var(--muted);
-      line-height:1.7;
-      margin-bottom:10px;
-    }
-
-    .end-floating{
-      position:fixed;
-      left:0;
-      right:0;
-      bottom:20px;
-      display:flex;
-      justify-content:center;
-      pointer-events:none;
-      z-index:999;
-    }
-
-    .end-mini{
-      pointer-events:auto;
-      width:180px;
-      padding:14px 20px;
-      font-size:18px;
-      font-weight:900;
-      border-radius:14px;
-      border:none;
-      background:var(--danger);
-      color:#fff;
-      box-shadow:0 6px 20px rgba(0,0,0,.18);
-      cursor:pointer;
-    }
-
-    .end-mini:active{
-      transform:translateY(2px);
-    }
-
-    @media (max-width: 640px){
-      .title{
-        font-size:28px;
+    try {
+      if (!env.OPENAI_API_KEY) {
+        return jsonResponse({ error: "OPENAI_API_KEY が未設定です。" }, 500, corsHeaders);
       }
 
-      .section-title{
-        font-size:22px;
+      if (!env.APP_PASSCODE_LIST) {
+        return jsonResponse({ error: "APP_PASSCODE_LIST が未設定です。" }, 500, corsHeaders);
       }
 
-      .output{
-        font-size:16px;
-      }
-
-      .pass-row{
-        grid-template-columns:1fr;
-        gap:8px;
-      }
-
-      .end-mini{
-        width:160px;
-      }
-    }
-  </style>
-</head>
-<body>
-  <div class="wrap">
-    <h1 class="title">問題と人力</h1>
-
-    <div class="pass-row">
-      <label for="passcode">パスコード</label>
-      <input type="password" id="passcode" placeholder="パスコードを入力" />
-    </div>
-
-    <section class="section">
-      <div class="section-head">
-        <h2 class="section-title">1. 問題文</h2>
-        <button class="speak-btn" id="speakQuestionBtn" type="button" title="問題文を読む">🔈</button>
-      </div>
-
-      <div class="mode-wrap">
-        <button class="mode-btn active" id="modeWeirdBtn" type="button">珍問</button>
-        <button class="mode-btn" id="modeKidBtn" type="button">小学生</button>
-      </div>
-
-      <textarea id="question" placeholder="例：
-富士山で琵琶湖を埋められるか？
-25mプールに一万円札を敷き詰めたら何枚必要か？
-りんごが5個あります。3個食べました。残りはいくつですか？"></textarea>
-
-      <div class="actions">
-        <button class="action primary" id="prepareBtn">質問する</button>
-        <button class="action ok-btn" id="micBtn">🎤 音声入力</button>
-        <button class="action ghost" id="editBtn">編集</button>
-        <button class="action ghost" id="clearBtn">クリア</button>
-        <button class="action ghost" id="stopReadingBtn">🔇 停止</button>
-      </div>
-
-      <div class="status" id="status">待機中です。</div>
-    </section>
-
-    <section class="section">
-      <div class="section-head">
-        <h2 class="section-title">2. 前提</h2>
-        <button class="speak-btn" id="speakPrepareBtn" type="button" title="前提を読む">🔈</button>
-      </div>
-
-      <div id="prepareBadge"></div>
-      <div class="output" id="prepareSummary">ここに、AIが整理した前提候補の要約が表示されます。</div>
-
-      <div class="assumption-panel hidden" id="assumptionPanel">
-        <div class="mini-note">
-          必要なら下の値や言い方を修正してください。修正しなければ、そのままの前提で計算します。
-        </div>
-
-        <div class="assumption-list" id="assumptionList"></div>
-
-        <div class="actions">
-          <button class="action primary" id="solveBtn">この前提で計算する</button>
-          <button class="action danger" id="resetAssumptionsBtn">前提候補を消す</button>
-        </div>
-      </div>
-    </section>
-
-    <section class="section">
-      <div class="section-head">
-        <h2 class="section-title">3. 計算結果</h2>
-        <button class="speak-btn" id="speakResultBtn" type="button" title="計算結果を読む">🔈</button>
-      </div>
-
-      <div id="resultBadge"></div>
-      <div class="output" id="resultOutput">ここに、途中経過・式・結論が表示されます。</div>
-    </section>
-  </div>
-
-  <div class="end-floating">
-    <button id="endBtn" class="end-mini">終了</button>
-  </div>
-
-  <script>
-    const WORKER_URL = "https://cal.gudafutanu.workers.dev/solve";
-    const PASSCODE_STORAGE_KEY = "mondai_to_jinriki_passcode_v1";
-
-    let currentMode = "weird";
-    let preparedData = null;
-
-    const passcodeEl = document.getElementById("passcode");
-    const questionEl = document.getElementById("question");
-    const statusEl = document.getElementById("status");
-
-    const modeWeirdBtn = document.getElementById("modeWeirdBtn");
-    const modeKidBtn = document.getElementById("modeKidBtn");
-
-    const prepareBtn = document.getElementById("prepareBtn");
-    const micBtn = document.getElementById("micBtn");
-    const editBtn = document.getElementById("editBtn");
-    const clearBtn = document.getElementById("clearBtn");
-    const solveBtn = document.getElementById("solveBtn");
-    const endBtn = document.getElementById("endBtn");
-    const resetAssumptionsBtn = document.getElementById("resetAssumptionsBtn");
-    const stopReadingBtn = document.getElementById("stopReadingBtn");
-
-    const speakQuestionBtn = document.getElementById("speakQuestionBtn");
-    const speakPrepareBtn = document.getElementById("speakPrepareBtn");
-    const speakResultBtn = document.getElementById("speakResultBtn");
-
-    const prepareSummaryEl = document.getElementById("prepareSummary");
-    const prepareBadgeEl = document.getElementById("prepareBadge");
-
-    const assumptionPanelEl = document.getElementById("assumptionPanel");
-    const assumptionListEl = document.getElementById("assumptionList");
-
-    const resultOutputEl = document.getElementById("resultOutput");
-    const resultBadgeEl = document.getElementById("resultBadge");
-
-    let recognition = null;
-    let isListening = false;
-    let speaking = false;
-
-    function setStatus(msg){
-      statusEl.textContent = msg;
-    }
-
-    function setBadge(target, type, text){
-      if (!target) return;
-      target.innerHTML = "";
-      if (!text) return;
-      const div = document.createElement("div");
-      div.className = `pill ${type}`;
-      div.textContent = text;
-      target.appendChild(div);
-    }
-
-    function setMode(mode){
-      currentMode = mode;
-      modeWeirdBtn.classList.toggle("active", mode === "weird");
-      modeKidBtn.classList.toggle("active", mode === "kid");
-
-      if (mode === "weird") {
-        questionEl.placeholder = `例：
-富士山で琵琶湖を埋められるか？
-25mプールに一万円札を敷き詰めたら何枚必要か？
-25mプールに一万円札を体積で詰めたら何枚必要か？`;
-      } else {
-        questionEl.placeholder = `例：
-りんごが5個あります。3個食べました。残りはいくつですか？
-100円のえんぴつを3本買いました。代金はいくらですか？
-12個のあめを4人で同じ数ずつ分けると1人何個ですか？`;
-      }
-    }
-
-    function escapeHtml(str){
-      return String(str)
-        .replace(/&/g, "&amp;")
-        .replace(/</g, "&lt;")
-        .replace(/>/g, "&gt;")
-        .replace(/"/g, "&quot;");
-    }
-
-    function formatNumberWithComma(text){
-      return text.replace(/\d{4,}(?:\.\d+)?/g, function(num){
-        const n = Number(num.replace(/,/g, ""));
-        return Number.isFinite(n) ? n.toLocaleString("ja-JP") : num;
-      });
-    }
-
-    function buildComparisonHints(text){
-      const hints = [];
-
-      const kmMatches = [...text.matchAll(/(\d[\d,]*\.?\d*)\s*km/g)];
-      for (const match of kmMatches) {
-        const value = Number(match[1].replace(/,/g, ""));
-        if (!Number.isFinite(value)) continue;
-        const earthCircumference = 40075;
-        const tokyoOsaka = 500;
-        const moonDistance = 384400;
-
-        hints.push(`・地球一周（約40,075 km）の約${(value / earthCircumference).toFixed(2)}周分`);
-        hints.push(`・東京〜大阪（約500 km）の約${(value / tokyoOsaka).toFixed(2)}回分`);
-        hints.push(`・地球から月まで（約384,400 km）の約${(value / moonDistance).toFixed(2)}回分`);
-        return hints;
-      }
-
-      const mMatches = [...text.matchAll(/(\d[\d,]*\.?\d*)\s*m(?![a-z])/g)];
-      for (const match of mMatches) {
-        const value = Number(match[1].replace(/,/g, ""));
-        if (!Number.isFinite(value)) continue;
-        const tokyoTower = 333;
-        const skytree = 634;
-
-        hints.push(`・東京タワー（333 m）の約${(value / tokyoTower).toFixed(2)}本分`);
-        hints.push(`・東京スカイツリー（634 m）の約${(value / skytree).toFixed(2)}本分`);
-        return hints;
-      }
-
-      const yenMatches = [...text.matchAll(/(\d[\d,]*\.?\d*)\s*円/g)];
-      for (const match of yenMatches) {
-        const value = Number(match[1].replace(/,/g, ""));
-        if (!Number.isFinite(value)) continue;
-
-        hints.push(`・1,000円札なら約${(value / 1000).toFixed(2)}枚分`);
-        hints.push(`・1万円札なら約${(value / 10000).toFixed(2)}枚分`);
-        return hints;
-      }
-
-      const dayMatches = [...text.matchAll(/(\d[\d,]*\.?\d*)\s*日/g)];
-      for (const match of dayMatches) {
-        const value = Number(match[1].replace(/,/g, ""));
-        if (!Number.isFinite(value)) continue;
-
-        hints.push(`・約${(value / 30).toFixed(2)}か月分`);
-        hints.push(`・約${(value / 365).toFixed(2)}年分`);
-        return hints;
-      }
-
-      return hints;
-    }
-
-    function savePasscode(){
-      try {
-        localStorage.setItem(PASSCODE_STORAGE_KEY, passcodeEl.value.trim());
-      } catch (e) {}
-    }
-
-    function loadPasscode(){
-      try {
-        const saved = localStorage.getItem(PASSCODE_STORAGE_KEY) || "";
-        if (saved) {
-          passcodeEl.value = saved;
-        }
-      } catch (e) {}
-    }
-
-    function renderPrepare(data){
-      preparedData = data;
-
-      const lines = [];
-      lines.push("【問題】");
-      lines.push(data.question || "");
-      lines.push("");
-
-      if (data.problem_type) {
-        lines.push("【問題のタイプ】");
-        lines.push(data.problem_type);
-        lines.push("");
-      }
-
-      lines.push("【AIが考えた解き方】");
-      lines.push(data.plan || "まだ整理できませんでした。");
-      lines.push("");
-
-      lines.push("【確認】");
-      lines.push(data.confirmation_message || "下の前提候補を確認してください。");
-
-      if (Array.isArray(data.missing_conditions) && data.missing_conditions.length) {
-        lines.push("");
-        lines.push("【結果が変わるポイント】");
-        data.missing_conditions.forEach(v => lines.push(`・${v}`));
-      }
-
-      prepareSummaryEl.textContent = formatNumberWithComma(lines.join("\n"));
-
-      if (data.ready_to_solve) {
-        setBadge(prepareBadgeEl, "warn", "前提候補を確認してください");
-      } else {
-        setBadge(prepareBadgeEl, "bad", "このままでは計算できません");
-      }
-
-      renderAssumptionInputs(data.assumptions || []);
-    }
-
-    function renderAssumptionInputs(assumptions){
-      assumptionListEl.innerHTML = "";
-
-      if (!Array.isArray(assumptions) || assumptions.length === 0) {
-        assumptionPanelEl.classList.add("hidden");
-        return;
-      }
-
-      assumptionPanelEl.classList.remove("hidden");
-
-      assumptions.forEach((item, index) => {
-        const wrap = document.createElement("div");
-        wrap.className = "assumption-item";
-
-        const key = item.key || `assumption_${index + 1}`;
-        const label = item.label || key;
-        const value = item.value ?? "";
-        const unit = item.unit || "";
-        const description = item.description || "";
-        const editable = item.editable !== false;
-
-        wrap.innerHTML = `
-          <div class="assumption-key">${escapeHtml(label)}</div>
-          <div class="assumption-meta">key: ${escapeHtml(key)} ${unit ? " / 単位: " + escapeHtml(unit) : ""}</div>
-          <div class="assumption-desc">${escapeHtml(description)}</div>
-          <input
-            type="text"
-            data-key="${escapeHtml(key)}"
-            data-label="${escapeHtml(label)}"
-            data-unit="${escapeHtml(unit)}"
-            data-description="${escapeHtml(description)}"
-            value="${escapeHtml(value)}"
-            ${editable ? "" : "readonly"}
-          />
-        `;
-        assumptionListEl.appendChild(wrap);
-      });
-    }
-
-    function collectAssumptionsFromUI(){
-      const inputs = assumptionListEl.querySelectorAll("input[data-key]");
-      return Array.from(inputs).map(input => ({
-        key: input.dataset.key || "",
-        label: input.dataset.label || "",
-        unit: input.dataset.unit || "",
-        description: input.dataset.description || "",
-        value: input.value.trim()
-      }));
-    }
-
-    function renderSolve(data){
-      const lines = [];
-
-      lines.push("【問題】");
-      lines.push(data.question || "");
-      lines.push("");
-
-      if (data.problem_type) {
-        lines.push("【問題のタイプ】");
-        lines.push(data.problem_type);
-        lines.push("");
-      }
-
-      if (Array.isArray(data.assumptions_used) && data.assumptions_used.length) {
-        lines.push("【使った前提】");
-        data.assumptions_used.forEach(v => lines.push(`・${v}`));
-        lines.push("");
-      }
-
-      if (Array.isArray(data.used_values) && data.used_values.length) {
-        lines.push("【使った数値】");
-        data.used_values.forEach(v => lines.push(`・${v}`));
-        lines.push("");
-      }
-
-      if (Array.isArray(data.reasoning_steps) && data.reasoning_steps.length) {
-        lines.push("【考え方の流れ】");
-        data.reasoning_steps.forEach((v, i) => lines.push(`${i + 1}. ${v}`));
-        lines.push("");
-      }
-
-      if (Array.isArray(data.calculation_steps) && data.calculation_steps.length) {
-        lines.push("【計算の途中】");
-        data.calculation_steps.forEach((v, i) => lines.push(`${i + 1}. ${v}`));
-        lines.push("");
-      }
-
-      if (data.final_formula) {
-        lines.push("【式】");
-        lines.push(data.final_formula);
-        lines.push("");
-      }
-
-      if (data.interpretation) {
-        lines.push("【この結果の意味】");
-        lines.push(data.interpretation);
-        lines.push("");
-      }
-
-      lines.push("【結論】");
-      lines.push(data.conclusion || "結論を出せませんでした。");
-
-      if (Array.isArray(data.notes) && data.notes.length) {
-        lines.push("");
-        lines.push("【補足】");
-        data.notes.forEach(v => lines.push(`・${v}`));
-      }
-
-      const mainText = formatNumberWithComma(lines.join("\n"));
-      const comparisonHints = buildComparisonHints(mainText);
-
-      let finalText = mainText;
-      if (comparisonHints.length) {
-        finalText += "\n\n【イメージしやすい比較】\n" + comparisonHints.join("\n");
-      }
-
-      resultOutputEl.textContent = finalText;
-
-      if (data.can_answer) {
-        setBadge(resultBadgeEl, "ok", "途中経過つきで計算しました");
-      } else {
-        setBadge(resultBadgeEl, "bad", "計算できませんでした");
-      }
-    }
-
-    async function requestWorker(payload){
-      const passcode = passcodeEl.value.trim();
-
+      const passcode = (request.headers.get("X-App-Passcode") || "").trim();
       if (!passcode) {
-        throw new Error("パスコードを入力してください。");
+        return jsonResponse({ error: "パスコードを入力してください。" }, 401, corsHeaders);
       }
 
-      savePasscode();
+      const passcodeCheck = validatePasscode(passcode, env.APP_PASSCODE_LIST);
+      if (!passcodeCheck.ok) {
+        return jsonResponse({ error: passcodeCheck.error }, 401, corsHeaders);
+      }
 
-      const res = await fetch(WORKER_URL, {
+      const body = await request.json().catch(() => ({}));
+      const action = String(body.action || "").trim();
+      const mode = String(body.mode || "weird").trim();
+      const question = String(body.question || "").trim();
+      const assumptions = Array.isArray(body.assumptions) ? body.assumptions : [];
+
+      if (!["prepare", "solve"].includes(action)) {
+        return jsonResponse({ error: "action は prepare または solve にしてください。" }, 400, corsHeaders);
+      }
+
+      if (!["weird", "kid"].includes(mode)) {
+        return jsonResponse({ error: "mode は weird または kid にしてください。" }, 400, corsHeaders);
+      }
+
+      if (!question) {
+        return jsonResponse({ error: "question が空です。" }, 400, corsHeaders);
+      }
+
+      const systemPrompt = buildSystemPrompt(mode, action);
+      const userPrompt = buildUserPrompt({ action, mode, question, assumptions });
+
+      const model = env.OPENAI_MODEL || "gpt-4o-mini";
+
+      const aiRes = await fetch("https://api.openai.com/v1/chat/completions", {
         method: "POST",
         headers: {
-          "Content-Type": "application/json",
-          "X-App-Passcode": passcode
+          "Authorization": `Bearer ${env.OPENAI_API_KEY}`,
+          "Content-Type": "application/json"
         },
-        body: JSON.stringify(payload)
+        body: JSON.stringify({
+          model,
+          temperature: 0.1,
+          response_format: { type: "json_object" },
+          messages: [
+            { role: "system", content: systemPrompt },
+            { role: "user", content: userPrompt }
+          ]
+        })
       });
 
-      const text = await res.text();
+      const aiJson = await aiRes.json();
 
-      let data;
+      if (!aiRes.ok) {
+        return jsonResponse({
+          error: "OpenAI error",
+          detail: aiJson
+        }, 500, corsHeaders);
+      }
+
+      const content = aiJson?.choices?.[0]?.message?.content || "{}";
+
+      let parsed;
       try {
-        data = JSON.parse(text);
-      } catch {
-        throw new Error("Workerの返答がJSONではありません。\n\n" + text);
+        parsed = JSON.parse(content);
+      } catch (e) {
+        return jsonResponse({
+          error: "AIのJSON解析に失敗しました。",
+          raw: content
+        }, 500, corsHeaders);
       }
 
-      if (!res.ok || data.error) {
-        throw new Error(data.error || "エラーが発生しました。");
+      if (action === "prepare") {
+        parsed = normalizePrepare(parsed, question, mode);
+      } else {
+        parsed = normalizeSolve(parsed, question, mode);
       }
 
-      return data;
+      return jsonResponse(parsed, 200, corsHeaders);
+
+    } catch (err) {
+      return jsonResponse({
+        error: err.message || "Unknown error"
+      }, 500, corsHeaders);
     }
-
-    async function callPrepare(){
-      const question = questionEl.value.trim();
-
-      if (!question) {
-        setStatus("まず問題文を入力してください。");
-        setBadge(prepareBadgeEl, "bad", "入力が必要です");
-        prepareSummaryEl.textContent = "問題文が空です。";
-        return;
-      }
-
-      setStatus("前提候補を整理しています...");
-      prepareBtn.disabled = true;
-      solveBtn.disabled = true;
-      clearBtn.disabled = true;
-      editBtn.disabled = true;
-      micBtn.disabled = true;
-      resetAssumptionsBtn.disabled = true;
-
-      try {
-        const data = await requestWorker({
-          action: "prepare",
-          mode: currentMode,
-          question
-        });
-
-        renderPrepare(data);
-        resultOutputEl.textContent = "ここに、途中経過・式・結論が表示されます。";
-        resultBadgeEl.innerHTML = "";
-        setStatus("前提候補を表示しました。");
-      } catch (err) {
-        console.error(err);
-        setBadge(prepareBadgeEl, "bad", "エラー");
-        prepareSummaryEl.textContent = "エラーが発生しました。\n\n" + (err.message || String(err));
-        setStatus("エラーが発生しました。");
-      } finally {
-        prepareBtn.disabled = false;
-        solveBtn.disabled = false;
-        clearBtn.disabled = false;
-        editBtn.disabled = false;
-        micBtn.disabled = false;
-        resetAssumptionsBtn.disabled = false;
-      }
-    }
-
-    async function callSolve(){
-      const question = questionEl.value.trim();
-
-      if (!question) {
-        setStatus("まず問題文を入力してください。");
-        return;
-      }
-
-      if (!preparedData) {
-        setStatus("先に「質問する」を押してください。");
-        return;
-      }
-
-      const finalAssumptions = collectAssumptionsFromUI();
-
-      setStatus("確定前提で計算しています...");
-      prepareBtn.disabled = true;
-      solveBtn.disabled = true;
-      clearBtn.disabled = true;
-      editBtn.disabled = true;
-      micBtn.disabled = true;
-      resetAssumptionsBtn.disabled = true;
-
-      try {
-        const data = await requestWorker({
-          action: "solve",
-          mode: currentMode,
-          question,
-          assumptions: finalAssumptions
-        });
-
-        renderSolve(data);
-        setStatus("計算結果を表示しました。");
-      } catch (err) {
-        console.error(err);
-        setBadge(resultBadgeEl, "bad", "エラー");
-        resultOutputEl.textContent = "エラーが発生しました。\n\n" + (err.message || String(err));
-        setStatus("エラーが発生しました。");
-      } finally {
-        prepareBtn.disabled = false;
-        solveBtn.disabled = false;
-        clearBtn.disabled = false;
-        editBtn.disabled = false;
-        micBtn.disabled = false;
-        resetAssumptionsBtn.disabled = false;
-      }
-    }
-
-    function resetAssumptions(){
-      preparedData = null;
-      assumptionListEl.innerHTML = "";
-      assumptionPanelEl.classList.add("hidden");
-      prepareSummaryEl.textContent = "ここに、AIが整理した前提候補の要約が表示されます。";
-      prepareBadgeEl.innerHTML = "";
-      resultOutputEl.textContent = "ここに、途中経過・式・結論が表示されます。";
-      resultBadgeEl.innerHTML = "";
-      setStatus("前提候補を消しました。");
-    }
-
-    function clearAll(){
-      questionEl.value = "";
-      preparedData = null;
-      prepareSummaryEl.textContent = "ここに、AIが整理した前提候補の要約が表示されます。";
-      resultOutputEl.textContent = "ここに、途中経過・式・結論が表示されます。";
-      prepareBadgeEl.innerHTML = "";
-      resultBadgeEl.innerHTML = "";
-      assumptionListEl.innerHTML = "";
-      assumptionPanelEl.classList.add("hidden");
-      stopSpeaking();
-      stopListening();
-      setStatus("待機中です。");
-      questionEl.focus();
-    }
-
-    function endApp(){
-  stopListening();
-  stopSpeaking();
-
-  document.body.innerHTML = `
-    <div style="
-      display:flex;
-      flex-direction:column;
-      justify-content:center;
-      align-items:center;
-      height:100vh;
-      background:#f7f7fb;
-      font-family:sans-serif;
-      text-align:center;
-      padding:20px;
-    ">
-      <div style="
-        font-size:26px;
-        font-weight:900;
-        margin-bottom:20px;
-      ">
-        アプリを終了しました
-      </div>
-
-      <button onclick="location.reload()" style="
-        padding:14px 28px;
-        font-size:18px;
-        border-radius:14px;
-        border:none;
-        background:#4f46e5;
-        color:white;
-        font-weight:900;
-      ">
-        再開
-      </button>
-    </div>
-  `;
-}
-
-    function editQuestion(){
-      questionEl.focus();
-      questionEl.selectionStart = questionEl.value.length;
-      questionEl.selectionEnd = questionEl.value.length;
-      setStatus("問題文を編集できます。");
-    }
-
-    function speakText(text){
-      if (!("speechSynthesis" in window)) {
-        setStatus("このブラウザは読み上げに対応していません。");
-        return;
-      }
-      stopSpeaking();
-
-      const cleanText = String(text || "").trim();
-      if (!cleanText) {
-        setStatus("読む内容がありません。");
-        return;
-      }
-
-      const utterance = new SpeechSynthesisUtterance(cleanText);
-      utterance.lang = "ja-JP";
-      utterance.rate = 1.0;
-      utterance.pitch = 1.0;
-
-      speaking = true;
-      utterance.onend = () => {
-        speaking = false;
-        setStatus("待機中です。");
-      };
-      utterance.onerror = () => {
-        speaking = false;
-        setStatus("読み上げでエラーが発生しました。");
-      };
-
-      window.speechSynthesis.speak(utterance);
-      setStatus("読み上げています...");
-    }
-
-    function stopSpeaking(){
-      if ("speechSynthesis" in window) {
-        window.speechSynthesis.cancel();
-      }
-      speaking = false;
-    }
-
-   function normalizeVoiceText(text){
-  return String(text || "")
-    .trim()
-    .replace(/[。．、]/g, "")
-    .replace(/\s+/g, "")
-    .toLowerCase();
-}
-    function initSpeechInput(){
-      const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-      if (!SpeechRecognition) {
-        return null;
-      }
-
-      const rec = new SpeechRecognition();
-      rec.lang = "ja-JP";
-      rec.interimResults = false;
-      rec.continuous = false;
-      rec.maxAlternatives = 1;
-
-      rec.onstart = () => {
-        isListening = true;
-        micBtn.textContent = "🎤 聞いています...";
-        setStatus("問題文を聞いています...");
-      };
-
-      rec.onresult = (event) => {
-  const rawText = event.results?.[0]?.[0]?.transcript || "";
-  const text = normalizeVoiceText(rawText);
-
-  if (!text) return;
-
-  // ===== 音声コマンド =====
-  if (text.includes("終了")) {
-    endApp();
-    return;
   }
-
-  if (text.includes("質問") || text.includes("考えて")) {
-    questionEl.value = rawText;
-    callPrepare();
-    return;
-  }
-
-  if (text.includes("計算")) {
-    callSolve();
-    return;
-  }
-
-  // ===== 通常入力 =====
-  questionEl.value = rawText;
-  setStatus("問題文を音声入力しました。");
 };
 
-      rec.onerror = (event) => {
-        const err = event.error || "unknown";
-        if (err === "not-allowed") {
-          setStatus("マイクの許可が必要です。");
-        } else if (err === "no-speech") {
-          setStatus("音声が聞き取れませんでした。");
-        } else {
-          setStatus("音声入力エラー: " + err);
-        }
-      };
+function validatePasscode(passcode, passcodeListRaw) {
+  let list;
+  try {
+    list = JSON.parse(passcodeListRaw);
+  } catch {
+    return {
+      ok: false,
+      error: "APP_PASSCODE_LIST のJSON形式が正しくありません。"
+    };
+  }
 
-      rec.onend = () => {
-        isListening = false;
-        micBtn.textContent = "🎤 音声入力";
-      };
+  if (!Array.isArray(list)) {
+    return {
+      ok: false,
+      error: "APP_PASSCODE_LIST は配列で設定してください。"
+    };
+  }
 
-      return rec;
+  const found = list.find(item => item && String(item.code || "").trim() === passcode);
+  if (!found) {
+    return {
+      ok: false,
+      error: "パスコードが違います。"
+    };
+  }
+
+  const expires = String(found.expires || "").trim();
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(expires)) {
+    return {
+      ok: false,
+      error: `パスコード ${passcode} の expires 形式が正しくありません。`
+    };
+  }
+
+  const todayJst = getTodayJstString();
+
+  if (todayJst > expires) {
+    return {
+      ok: false,
+      error: "このパスコードの有効期限は切れています。"
+    };
+  }
+
+  return { ok: true };
+}
+
+function getTodayJstString() {
+  const now = new Date();
+  const jst = new Date(now.getTime() + 9 * 60 * 60 * 1000);
+  const y = jst.getUTCFullYear();
+  const m = String(jst.getUTCMonth() + 1).padStart(2, "0");
+  const d = String(jst.getUTCDate()).padStart(2, "0");
+  return `${y}-${m}-${d}`;
+}
+
+function buildUserPrompt({ action, mode, question, assumptions }) {
+  if (action === "prepare") {
+    return `
+mode: ${mode}
+action: prepare
+
+問題:
+${question}
+    `.trim();
+  }
+
+  return `
+mode: ${mode}
+action: solve
+
+問題:
+${question}
+
+ユーザーが最終確定した前提:
+${JSON.stringify(assumptions, null, 2)}
+  `.trim();
+}
+
+function buildSystemPrompt(mode, action) {
+  const commonRules = `
+あなたは「珍問や文章題を、前提整理 → ユーザー確認 → 途中経過つき計算」で扱うAIです。
+絶対に次を守ってください。
+
+【最重要】
+1. 結論だけを出してはいけません。
+2. まず必要な数値や前提候補を整理します。
+3. solve では、ユーザーが最終確定した前提だけを使います。
+4. 計算時は、使った数値、理屈、途中計算、式、結論を分けて出します。
+5. 信頼できる数値が思い出せない場合、推測で作り話をしてはいけません。
+6. 曖昧な言葉がある場合は、prepare で「結果が変わるポイント」として明示します。
+7. 日本語で答えます。
+8. 必ずJSONだけを返します。
+9. 単位がある場合はできるだけ単位をつけます。
+10. 子どもの文章題でも使えるように、理屈を見える化します。
+  `.trim();
+
+  if (action === "prepare") {
+    if (mode === "weird") {
+      return `
+${commonRules}
+
+今は「珍問モード」の prepare です。
+まだ計算してはいけません。
+
+【prepare のJSON形式】
+{
+  "mode": "weird",
+  "action": "prepare",
+  "question": "問題文",
+  "problem_type": "比較問題 / 面積問題 / 体積問題 / 速さ問題 など",
+  "ready_to_solve": true,
+  "assumptions": [
+    {
+      "key": "pool_width",
+      "label": "プールの幅",
+      "value": "13",
+      "unit": "m",
+      "description": "25m学校用プールの標準的な幅として仮定",
+      "editable": true
+    }
+  ],
+  "missing_conditions": ["結果が変わる条件1", "条件2"],
+  "plan": "どういう理屈で解くか",
+  "confirmation_message": "前提を確認し、必要なら修正してから計算してください。"
+}
+      `.trim();
     }
 
-    async function startListening(){
-      if (!recognition) {
-        recognition = initSpeechInput();
-      }
-      if (!recognition) {
-        alert("このブラウザは音声入力に対応していません。");
-        return;
-      }
-      try {
-        recognition.start();
-      } catch (e) {
-        setStatus("音声入力を開始できませんでした。");
-      }
+    return `
+${commonRules}
+
+今は「小学生モード」の prepare です。
+まだ答えを出してはいけません。
+
+【prepare のJSON形式】
+{
+  "mode": "kid",
+  "action": "prepare",
+  "question": "問題文",
+  "problem_type": "たし算 / ひき算 / かけ算 / わり算 / くらべる など",
+  "ready_to_solve": true,
+  "assumptions": [
+    {
+      "key": "start_count",
+      "label": "さいしょの数",
+      "value": "5",
+      "unit": "こ",
+      "description": "はじめに あった 数",
+      "editable": true
     }
+  ],
+  "missing_conditions": [],
+  "plan": "どう考えるかをやさしく説明",
+  "confirmation_message": "この前提でよければ計算します。"
+}
+      `.trim();
+  }
 
-    function stopListening(){
-      if (recognition && isListening) {
-        try {
-          recognition.stop();
-        } catch (e) {}
-      }
-      isListening = false;
-      micBtn.textContent = "🎤 音声入力";
-    }
+  if (mode === "weird") {
+    return `
+${commonRules}
 
-    modeWeirdBtn.addEventListener("click", () => setMode("weird"));
-    modeKidBtn.addEventListener("click", () => setMode("kid"));
+今は「珍問モード」の solve です。
 
-    prepareBtn.addEventListener("click", callPrepare);
-    solveBtn.addEventListener("click", callSolve);
-    clearBtn.addEventListener("click", clearAll);
-    editBtn.addEventListener("click", editQuestion);
-    resetAssumptionsBtn.addEventListener("click", resetAssumptions);
-    endBtn.addEventListener("click", endApp);
+【solve のJSON形式】
+{
+  "mode": "weird",
+  "action": "solve",
+  "question": "問題文",
+  "problem_type": "体積問題など",
+  "can_answer": true,
+  "assumptions_used": ["前提1", "前提2"],
+  "used_values": ["数値1", "数値2"],
+  "reasoning_steps": ["理屈1", "理屈2"],
+  "calculation_steps": ["途中計算1", "途中計算2"],
+  "final_formula": "最終式",
+  "interpretation": "この結果の意味",
+  "conclusion": "結論",
+  "notes": ["補足1"]
+}
+    `.trim();
+  }
 
-    micBtn.addEventListener("click", async () => {
-      if (isListening) {
-        stopListening();
-        setStatus("音声入力を停止しました。");
-      } else {
-        await startListening();
-      }
-    });
+  return `
+${commonRules}
 
-    speakQuestionBtn.addEventListener("click", () => {
-      speakText(questionEl.value);
-    });
+今は「小学生モード」の solve です。
 
-    speakPrepareBtn.addEventListener("click", () => {
-      speakText(prepareSummaryEl.textContent);
-    });
+【solve のJSON形式】
+{
+  "mode": "kid",
+  "action": "solve",
+  "question": "問題文",
+  "problem_type": "ひき算など",
+  "can_answer": true,
+  "assumptions_used": ["前提1"],
+  "used_values": ["数値1", "数値2"],
+  "reasoning_steps": ["なにを もとめるか", "どの数を つかうか", "どうして このしきか"],
+  "calculation_steps": ["5こ あった", "3こ たべた", "だから 5-3 をする"],
+  "final_formula": "5 - 3 = 2",
+  "interpretation": "2こ のこった",
+  "conclusion": "こたえは 2こ です。",
+  "notes": []
+}
+  `.trim();
+}
 
-    speakResultBtn.addEventListener("click", () => {
-      speakText(resultOutputEl.textContent);
-    });
+function normalizePrepare(parsed, question, mode) {
+  const assumptions = Array.isArray(parsed.assumptions) ? parsed.assumptions : [];
 
-    stopReadingBtn.addEventListener("click", () => {
-      stopSpeaking();
-      setStatus("読み上げを停止しました。");
-    });
+  return {
+    mode,
+    action: "prepare",
+    question: asString(parsed.question, question),
+    problem_type: asString(parsed.problem_type, "不明"),
+    ready_to_solve: parsed.ready_to_solve === true,
+    assumptions: assumptions.map((item, index) => ({
+      key: asString(item?.key, `assumption_${index + 1}`),
+      label: asString(item?.label, `項目${index + 1}`),
+      value: asString(item?.value, ""),
+      unit: asString(item?.unit, ""),
+      description: asString(item?.description, ""),
+      editable: item?.editable !== false
+    })),
+    missing_conditions: asArray(parsed.missing_conditions),
+    plan: asString(parsed.plan, mode === "kid" ? "どう考えるかをまだ整理できませんでした。" : "どう解くかをまだ整理できませんでした。"),
+    confirmation_message: asString(
+      parsed.confirmation_message,
+      mode === "kid"
+        ? "この前提でよければ計算します。"
+        : "前提を確認し、必要なら修正してから計算してください。"
+    )
+  };
+}
 
-    passcodeEl.addEventListener("input", savePasscode);
+function normalizeSolve(parsed, question, mode) {
+  return {
+    mode,
+    action: "solve",
+    question: asString(parsed.question, question),
+    problem_type: asString(parsed.problem_type, "不明"),
+    can_answer: parsed.can_answer === true,
+    assumptions_used: asArray(parsed.assumptions_used),
+    used_values: asArray(parsed.used_values),
+    reasoning_steps: asArray(parsed.reasoning_steps),
+    calculation_steps: asArray(parsed.calculation_steps),
+    final_formula: asString(parsed.final_formula, ""),
+    interpretation: asString(parsed.interpretation, ""),
+    conclusion: asString(
+      parsed.conclusion,
+      mode === "kid" ? "このままでは とけません。" : "探せません"
+    ),
+    notes: asArray(parsed.notes)
+  };
+}
 
-    window.addEventListener("load", () => {
-      loadPasscode();
-      setMode("weird");
-    });
-  </script>
-</body>
-</html>
+function asArray(v) {
+  return Array.isArray(v) ? v.filter(x => typeof x === "string") : [];
+}
+
+function asString(v, fallback = "") {
+  return typeof v === "string" ? v : fallback;
+}
+
+function jsonResponse(data, status = 200, headers = {}) {
+  return new Response(JSON.stringify(data, null, 2), {
+    status,
+    headers
+  });
+}
