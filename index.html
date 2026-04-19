@@ -889,11 +889,43 @@
     }
 
     function endApp(){
-      stopListening();
-      stopSpeaking();
-      micBtn.textContent = "🎤 音声入力";
-      setStatus("終了しました。マイクをオフにしました。");
-    }
+  stopListening();
+  stopSpeaking();
+
+  document.body.innerHTML = `
+    <div style="
+      display:flex;
+      flex-direction:column;
+      justify-content:center;
+      align-items:center;
+      height:100vh;
+      background:#f7f7fb;
+      font-family:sans-serif;
+      text-align:center;
+      padding:20px;
+    ">
+      <div style="
+        font-size:26px;
+        font-weight:900;
+        margin-bottom:20px;
+      ">
+        アプリを終了しました
+      </div>
+
+      <button onclick="location.reload()" style="
+        padding:14px 28px;
+        font-size:18px;
+        border-radius:14px;
+        border:none;
+        background:#4f46e5;
+        color:white;
+        font-weight:900;
+      ">
+        再開
+      </button>
+    </div>
+  `;
+}
 
     function editQuestion(){
       questionEl.focus();
@@ -941,13 +973,13 @@
       speaking = false;
     }
 
-    function normalizeVoiceText(text){
-      return String(text || "")
-        .trim()
-        .replace(/[。．]/g, "")
-        .replace(/\s+/g, "");
-    }
-
+   function normalizeVoiceText(text){
+  return String(text || "")
+    .trim()
+    .replace(/[。．、]/g, "")
+    .replace(/\s+/g, "")
+    .toLowerCase();
+}
     function initSpeechInput(){
       const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
       if (!SpeechRecognition) {
@@ -967,19 +999,32 @@
       };
 
       rec.onresult = (event) => {
-        const rawText = event.results?.[0]?.[0]?.transcript || "";
-        const compact = normalizeVoiceText(rawText);
+  const rawText = event.results?.[0]?.[0]?.transcript || "";
+  const text = normalizeVoiceText(rawText);
 
-        if (!rawText.trim()) return;
+  if (!text) return;
 
-        if (compact === "終了") {
-          endApp();
-          return;
-        }
+  // ===== 音声コマンド =====
+  if (text.includes("終了")) {
+    endApp();
+    return;
+  }
 
-        questionEl.value = rawText.trim();
-        setStatus("問題文を音声入力しました。");
-      };
+  if (text.includes("質問") || text.includes("考えて")) {
+    questionEl.value = rawText;
+    callPrepare();
+    return;
+  }
+
+  if (text.includes("計算")) {
+    callSolve();
+    return;
+  }
+
+  // ===== 通常入力 =====
+  questionEl.value = rawText;
+  setStatus("問題文を音声入力しました。");
+};
 
       rec.onerror = (event) => {
         const err = event.error || "unknown";
