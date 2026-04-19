@@ -339,7 +339,7 @@
   <button class="action ghost" id="editBtn">編集</button>
   <button class="action ghost" id="clearBtn">クリア</button>
   <button class="action ghost" id="stopReadingBtn">🔇 停止</button>
-  <button class="action danger" id="endBtn">終了</button>
+        
 </div>
 
       <div class="status" id="status">待機中です。</div>
@@ -374,7 +374,21 @@
         <button class="speak-btn" id="speakResultBtn" type="button" title="計算結果を読む">🔈</button>
       </div>
 
-      <div id="resultBadge"></div>
+      <div id="result"></div>
+
+<button id="endBtn" style="
+  margin-top: 20px;
+  width: 100%;
+  padding: 14px;
+  font-size: 18px;
+  border-radius: 12px;
+  background: #ff5c5c;
+  color: white;
+  border: none;
+">
+  終了
+</button>
+      
       <div class="output" id="resultOutput">ここに、途中経過・式・結論が表示されます。</div>
     </section>
   </div>
