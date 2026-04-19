@@ -339,12 +339,13 @@
 りんごが5個あります。3個食べました。残りはいくつですか？"></textarea>
 
       <div class="actions">
-        <button class="action primary" id="prepareBtn">開く</button>
-        <button class="action ok-btn" id="micBtn">🎤 音声入力</button>
-        <button class="action ghost" id="editBtn">編集</button>
-        <button class="action ghost" id="clearBtn">クリア</button>
-        <button class="action ghost" id="stopReadingBtn">🔇 停止</button>
-      </div>
+  <button class="action primary" id="prepareBtn">質問するく</button>
+  <button class="action ok-btn" id="micBtn">🎤 音声入力</button>
+  <button class="action ghost" id="editBtn">編集</button>
+  <button class="action ghost" id="clearBtn">クリア</button>
+  <button class="action ghost" id="stopReadingBtn">🔇 停止</button>
+  <button class="action danger" id="endBtn">終了</button>
+</div>
 
       <div class="status" id="status">待機中です。</div>
     </section>
@@ -402,6 +403,7 @@
     const editBtn = document.getElementById("editBtn");
     const clearBtn = document.getElementById("clearBtn");
     const solveBtn = document.getElementById("solveBtn");
+    const endBtn = document.getElementById("endBtn");
     const resetAssumptionsBtn = document.getElementById("resetAssumptionsBtn");
     const stopReadingBtn = document.getElementById("stopReadingBtn");
 
@@ -425,7 +427,7 @@
     function setStatus(msg){
       statusEl.textContent = msg;
     }
-
+   
     function setBadge(target, type, text){
       target.innerHTML = "";
       if (!text) return;
@@ -787,7 +789,7 @@
       }
 
       if (!preparedData) {
-        setStatus("先に「開く」を押してください。");
+        setStatus("先に「質問する」を押してください。");
         return;
       }
 
@@ -837,20 +839,29 @@
       setStatus("前提候補を消しました。");
     }
 
-    function clearAll(){
-      questionEl.value = "";
-      preparedData = null;
-      prepareSummaryEl.textContent = "ここに、AIが整理した前提候補の要約が表示されます。";
-      resultOutputEl.textContent = "ここに、途中経過・式・結論が表示されます。";
-      prepareBadgeEl.innerHTML = "";
-      resultBadgeEl.innerHTML = "";
-      assumptionListEl.innerHTML = "";
-      assumptionPanelEl.classList.add("hidden");
-      stopSpeaking();
-      stopListening();
-      setStatus("待機中です。");
-      questionEl.focus();
-    }
+   function clearAll(){
+  questionEl.value = "";
+  preparedData = null;
+  prepareSummaryEl.textContent = "ここに、AIが整理した前提候補の要約が表示されます。";
+  resultOutputEl.textContent = "ここに、途中経過・式・結論が表示されます。";
+  prepareBadgeEl.innerHTML = "";
+  resultBadgeEl.innerHTML = "";
+  assumptionListEl.innerHTML = "";
+  assumptionPanelEl.classList.add("hidden");
+  stopSpeaking();
+  stopListening();
+  setStatus("待機中です。");
+  questionEl.focus();
+}
+
+// ← ここで一度ちゃんと閉じる！
+
+function endApp(){
+  stopListening();
+  stopSpeaking();
+  micBtn.textContent = "🎤 音声入力";
+  setStatus("終了しました。マイクをオフにしました。");
+}
 
     function editQuestion(){
       questionEl.focus();
@@ -917,12 +928,12 @@
       };
 
       rec.onresult = (event) => {
-        const text = event.results?.[0]?.[0]?.transcript || "";
-        if (text.trim()) {
-          questionEl.value = text.trim();
-          setStatus("問題文を音声入力しました。");
-        }
-      };
+  const text = event.results?.[0]?.[0]?.transcript || "";
+  if (text.trim()) {
+    questionEl.value = text.trim();
+    setStatus("問題文を音声入力しました。");
+  }
+};
 
       rec.onerror = (event) => {
         const err = event.error || "unknown";
@@ -976,6 +987,7 @@
     clearBtn.addEventListener("click", clearAll);
     editBtn.addEventListener("click", editQuestion);
     resetAssumptionsBtn.addEventListener("click", resetAssumptions);
+    endBtn.addEventListener("click", endApp);
 
     micBtn.addEventListener("click", async () => {
       if (isListening) {
