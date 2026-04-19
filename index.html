@@ -328,11 +328,6 @@
         <button class="speak-btn" id="speakQuestionBtn" type="button" title="問題文を読む">🔈</button>
       </div>
 
-      <div class="mode-wrap">
-        <button class="mode-btn active" id="modeWeirdBtn" type="button">珍問</button>
-        <button class="mode-btn" id="modeKidBtn" type="button">小学生</button>
-      </div>
-
       <textarea id="question" placeholder="例：
 富士山で琵琶湖を埋められるか？
 25mプールに一万円札を敷き詰めたら何枚必要か？
@@ -394,9 +389,6 @@
     const passcodeEl = document.getElementById("passcode");
     const questionEl = document.getElementById("question");
     const statusEl = document.getElementById("status");
-
-    const modeWeirdBtn = document.getElementById("modeWeirdBtn");
-    const modeKidBtn = document.getElementById("modeKidBtn");
 
     const prepareBtn = document.getElementById("prepareBtn");
     const micBtn = document.getElementById("micBtn");
@@ -978,9 +970,6 @@ function endApp(){
       isListening = false;
       micBtn.textContent = "🎤 音声入力";
     }
-
-    modeWeirdBtn.addEventListener("click", () => setMode("weird"));
-    modeKidBtn.addEventListener("click", () => setMode("kid"));
 
     prepareBtn.addEventListener("click", callPrepare);
     solveBtn.addEventListener("click", callSolve);
